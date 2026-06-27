@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pgb_app/features/auth/presentation/pages/login_page.dart';
 import 'package:pgb_app/features/locations/presentation/pages/locations_page.dart';
+import 'package:pgb_app/features/tasks/presentation/pages/tasks_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -317,7 +318,12 @@ class ProfilePage extends StatelessWidget {
           ),
           unselectedLabelStyle: TextStyle(fontSize: 12.sp),
           onTap: (index) {
-            if (index == 1) {
+            if (index == 0) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const TasksPage()),
+              );
+            } else if (index == 1) {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => const LocationsPage()),

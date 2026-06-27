@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pgb_app/features/profile/presentation/pages/profile_page.dart';
+import 'package:pgb_app/features/locations/presentation/pages/new_location_page.dart';
+import 'package:pgb_app/features/locations/presentation/pages/edit_location_page.dart';
+import 'package:pgb_app/features/tasks/presentation/pages/tasks_page.dart';
 
 class LocationsPage extends StatelessWidget {
   const LocationsPage({super.key});
@@ -16,16 +19,28 @@ class LocationsPage extends StatelessWidget {
     final cardBorderColor = colorScheme.outline;
     final textColor = colorScheme.onSurface;
     final subTextColor = isDark ? Colors.grey.shade400 : Colors.grey.shade600;
-    
-    final activeIconBg = isDark ? const Color(0xFF0F3231) : const Color(0xFFE6F4F2);
+
+    final activeIconBg = isDark
+        ? const Color(0xFF0F3231)
+        : const Color(0xFFE6F4F2);
     final activeIconColor = const Color(0xFF0D9488);
-    final activeBadgeBg = isDark ? const Color(0xFF132E27) : const Color(0xFFECFDF5);
+    final activeBadgeBg = isDark
+        ? const Color(0xFF132E27)
+        : const Color(0xFFECFDF5);
     final activeBadgeText = const Color(0xFF10B981);
 
-    final inactiveIconBg = isDark ? const Color(0xFF24303B) : const Color(0xFFF1F5F9);
-    final inactiveIconColor = isDark ? Colors.grey.shade500 : Colors.grey.shade600;
-    final inactiveBadgeBg = isDark ? const Color(0xFF24303B) : const Color(0xFFF1F5F9);
-    final inactiveBadgeText = isDark ? Colors.grey.shade400 : Colors.grey.shade600;
+    final inactiveIconBg = isDark
+        ? const Color(0xFF24303B)
+        : const Color(0xFFF1F5F9);
+    final inactiveIconColor = isDark
+        ? Colors.grey.shade500
+        : Colors.grey.shade600;
+    final inactiveBadgeBg = isDark
+        ? const Color(0xFF24303B)
+        : const Color(0xFFF1F5F9);
+    final inactiveBadgeText = isDark
+        ? Colors.grey.shade400
+        : Colors.grey.shade600;
 
     final List<Map<String, dynamic>> locations = [
       {
@@ -77,7 +92,14 @@ class LocationsPage extends StatelessWidget {
                     child: IconButton(
                       padding: EdgeInsets.zero,
                       icon: Icon(Icons.add, color: Colors.white, size: 20.r),
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NewLocationPage(),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -86,10 +108,7 @@ class LocationsPage extends StatelessWidget {
 
               // Search Bar
               TextFormField(
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 15.sp,
-                ),
+                style: TextStyle(color: textColor, fontSize: 15.sp),
                 decoration: InputDecoration(
                   hintText: 'Search locations',
                   prefixIcon: Icon(Icons.search, size: 22.r),
@@ -106,117 +125,152 @@ class LocationsPage extends StatelessWidget {
                     final item = locations[index];
                     final bool isActive = item['isActive'];
 
-                    return Container(
-                      padding: EdgeInsets.all(16.r),
-                      decoration: BoxDecoration(
-                        color: cardBgColor,
-                        borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(color: cardBorderColor, width: 1.r),
-                      ),
-                      child: Row(
-                        children: [
-                          // Left pin icon container
-                          Container(
-                            padding: EdgeInsets.all(10.r),
-                            decoration: BoxDecoration(
-                              color: isActive ? activeIconBg : inactiveIconBg,
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            child: Icon(
-                              Icons.location_on_outlined,
-                              size: 24.r,
-                              color: isActive ? activeIconColor : inactiveIconColor,
+                    return GestureDetector(
+                      onTap: () {
+                        final radiusVal =
+                            double.tryParse(item['radius'].split(' ').first) ??
+                            150.0;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditLocationPage(
+                              initialName: item['name'],
+                              initialCoords: item['coords'],
+                              initialRadius: radiusVal,
+                              initialIsActive: isActive,
                             ),
                           ),
-                          SizedBox(width: 16.w),
+                        );
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(16.r),
+                        decoration: BoxDecoration(
+                          color: cardBgColor,
+                          borderRadius: BorderRadius.circular(16.r),
+                          border: Border.all(
+                            color: cardBorderColor,
+                            width: 1.r,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            // Left pin icon container
+                            Container(
+                              padding: EdgeInsets.all(10.r),
+                              decoration: BoxDecoration(
+                                color: isActive ? activeIconBg : inactiveIconBg,
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                              child: Icon(
+                                Icons.location_on_outlined,
+                                size: 24.r,
+                                color: isActive
+                                    ? activeIconColor
+                                    : inactiveIconColor,
+                              ),
+                            ),
+                            SizedBox(width: 16.w),
 
-                          // Text Info
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item['name'],
-                                  style: TextStyle(
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.bold,
-                                    color: textColor,
-                                  ),
-                                ),
-                                SizedBox(height: 4.h),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.explore_outlined,
-                                      size: 14.r,
-                                      color: subTextColor,
+                            // Text Info
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item['name'],
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor,
                                     ),
-                                    SizedBox(width: 4.w),
-                                    Text(
-                                      item['coords'],
-                                      style: TextStyle(
-                                        fontSize: 13.sp,
+                                  ),
+                                  SizedBox(height: 4.h),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.explore_outlined,
+                                        size: 14.r,
                                         color: subTextColor,
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 8.h),
-                                // Badges
-                                Row(
-                                  children: [
-                                    // Radius Badge
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 8.w,
-                                        vertical: 4.h,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isDark ? const Color(0xFF24303B) : const Color(0xFFF1F5F9),
-                                        borderRadius: BorderRadius.circular(6.r),
-                                      ),
-                                      child: Text(
-                                        item['radius'],
+                                      SizedBox(width: 4.w),
+                                      Text(
+                                        item['coords'],
                                         style: TextStyle(
-                                          fontSize: 11.sp,
-                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13.sp,
                                           color: subTextColor,
                                         ),
                                       ),
-                                    ),
-                                    SizedBox(width: 8.w),
-                                    // Active/Inactive Badge
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 8.w,
-                                        vertical: 4.h,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isActive ? activeBadgeBg : inactiveBadgeBg,
-                                        borderRadius: BorderRadius.circular(6.r),
-                                      ),
-                                      child: Text(
-                                        isActive ? 'Active' : 'Inactive',
-                                        style: TextStyle(
-                                          fontSize: 11.sp,
-                                          fontWeight: FontWeight.w600,
-                                          color: isActive ? activeBadgeText : inactiveBadgeText,
+                                    ],
+                                  ),
+                                  SizedBox(height: 8.h),
+                                  // Badges
+                                  Row(
+                                    children: [
+                                      // Radius Badge
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 8.w,
+                                          vertical: 4.h,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? const Color(0xFF24303B)
+                                              : const Color(0xFFF1F5F9),
+                                          borderRadius: BorderRadius.circular(
+                                            6.r,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          item['radius'],
+                                          style: TextStyle(
+                                            fontSize: 11.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: subTextColor,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                      SizedBox(width: 8.w),
+                                      // Active/Inactive Badge
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 8.w,
+                                          vertical: 4.h,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isActive
+                                              ? activeBadgeBg
+                                              : inactiveBadgeBg,
+                                          borderRadius: BorderRadius.circular(
+                                            6.r,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          isActive ? 'Active' : 'Inactive',
+                                          style: TextStyle(
+                                            fontSize: 11.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: isActive
+                                                ? activeBadgeText
+                                                : inactiveBadgeText,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
 
-                          // Suffix Arrow
-                          Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 14.r,
-                            color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
-                          ),
-                        ],
+                            // Suffix Arrow
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 14.r,
+                              color: isDark
+                                  ? Colors.grey.shade600
+                                  : Colors.grey.shade400,
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -227,7 +281,12 @@ class LocationsPage extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const NewLocationPage()),
+          );
+        },
         backgroundColor: colorScheme.primary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.r),
@@ -248,14 +307,21 @@ class LocationsPage extends StatelessWidget {
           type: BottomNavigationBarType.fixed,
           backgroundColor: isDark ? const Color(0xFF121B22) : Colors.white,
           selectedItemColor: colorScheme.primary,
-          unselectedItemColor: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+          unselectedItemColor: isDark
+              ? Colors.grey.shade600
+              : Colors.grey.shade400,
           selectedLabelStyle: TextStyle(
             fontSize: 12.sp,
             fontWeight: FontWeight.w600,
           ),
           unselectedLabelStyle: TextStyle(fontSize: 12.sp),
           onTap: (index) {
-            if (index == 3) {
+            if (index == 0) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const TasksPage()),
+              );
+            } else if (index == 3) {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => const ProfilePage()),

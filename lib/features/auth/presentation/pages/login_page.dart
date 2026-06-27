@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pgb_app/features/auth/presentation/pages/register_page.dart';
-import 'package:pgb_app/features/profile/presentation/pages/profile_page.dart';
+import 'package:pgb_app/features/tasks/presentation/pages/tasks_page.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
@@ -146,7 +146,7 @@ class LoginPage extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const ProfilePage()),
+                      MaterialPageRoute(builder: (context) => const TasksPage()),
                     );
                   },
                   child: Text(
