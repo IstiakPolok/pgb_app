@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pgb_app/core/theme/app_spacer.dart';
-import 'package:pgb_app/core/theme/app_theme.dart';
+import 'package:pgb_app/core/theme/app_assets.dart';
 import 'package:pgb_app/features/auth/presentation/pages/register_page.dart';
+import 'package:pgb_app/features/main/presentation/pages/main_navigation_page.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
@@ -13,6 +14,7 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: SafeArea(
@@ -29,8 +31,8 @@ class LoginPage extends StatelessWidget {
                 Center(
                   child: SvgPicture.asset(
                     isDark
-                        ? 'assets/logos/darkLogoWithName.svg'
-                        : 'assets/logos/logoWithName.svg',
+                        ? AppAssets.darkLogoWithName
+                        : AppAssets.logoWithName,
                     height: 100.h,
                     fit: BoxFit.contain,
                   ),
@@ -38,7 +40,6 @@ class LoginPage extends StatelessWidget {
 
                 v16pad,
 
-                // Welcome texts
                 Text(
                   'Welcome back',
                   textAlign: TextAlign.center,
@@ -54,22 +55,17 @@ class LoginPage extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15.sp,
-                    color: isDark
-                        ? AppTheme.darkcolorgray
-                        : AppTheme.lightcolorgray,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
                 v40pad,
 
-                // Email Field
                 Text(
                   'Email',
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? AppTheme.darkcolorgray
-                        : AppTheme.lightcolorgray,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
                 v8pad,
@@ -91,9 +87,7 @@ class LoginPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? AppTheme.darkcolorgray
-                        : AppTheme.lightcolorgray,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
                 v8pad,
@@ -145,7 +139,14 @@ class LoginPage extends StatelessWidget {
 
                 // Sign In Button
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MainNavigationPage(),
+                      ),
+                    );
+                  },
                   child: Text(
                     'Sign In',
                     style: TextStyle(

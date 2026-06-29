@@ -15,8 +15,14 @@ class AppTheme {
   static const Color darkcolorprimary = Color(0xFF2DD4BF);
   static const Color darkcoloraccent = Color(0xFFEEF2F7);
   static const Color darkcolorlightgray = Color(0xFF98A4B4);
-  static const Color darkcolordarkinputcolor = Color(0xFF18212);
+  static const Color darkcolordarkinputcolor = Color(0x0ff18212);
   static const Color darkcolorgray = Color(0xFF98A4B4);
+
+  // loctions scren colors
+  static const Color lightcolorprimarylight = Color(0xFFD6F3EF);
+  static const Color darkcolorprimarylight = Color(0xFF123833);
+  static const Color lightcolorinactivebadge = Color(0xFFF1F5F9);
+  static const Color darkcolorinactivebadge = Color(0xFF24303B);
 
   static ThemeData get lightTheme {
     return ThemeData(
@@ -30,11 +36,13 @@ class AppTheme {
         secondary: lightcoloraccent,
         surface: lightcolorbg,
         onSurface: Colors.black,
-        primaryContainer: const Color(0xFFE6F4F2),
+        onSurfaceVariant: lightcolorgray,
+        primaryContainer: Colors.white,
         onPrimaryContainer: lightcolorprimary,
         error: const Color(0xFFEF4444),
         outline: Colors.grey.shade200,
       ),
+      dividerColor: Colors.grey.shade200,
 
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -94,13 +102,13 @@ class AppTheme {
         secondary: darkcoloraccent,
         surface: darkcolorbg,
         onSurface: darkcoloraccent,
-        primaryContainer: const Color(
-          0xFF0F3231,
-        ), // Dark theme badge background
-        onPrimaryContainer: darkcolorprimary, // Dark theme badge text
-        error: const Color(0xFFEF4444), // Danger color
-        outline: Colors.transparent, // Card border color
+        onSurfaceVariant: darkcolorgray,
+        primaryContainer: const Color(0xFF18212F),
+        onPrimaryContainer: darkcolorprimary,
+        error: const Color(0xFFEF4444),
+        outline: Colors.transparent,
       ),
+      dividerColor: const Color(0x14FFFFFF),
 
       appBarTheme: AppBarTheme(
         backgroundColor: darkcolorbg,

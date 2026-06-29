@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pgb_app/core/theme/app_spacer.dart';
-import 'package:pgb_app/core/theme/app_theme.dart';
+import 'package:pgb_app/core/theme/app_assets.dart';
 import 'package:pgb_app/features/auth/presentation/pages/login_page.dart';
 
 class RegisterPage extends StatelessWidget {
@@ -13,6 +13,7 @@ class RegisterPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: SafeArea(
@@ -27,8 +28,8 @@ class RegisterPage extends StatelessWidget {
                 Center(
                   child: SvgPicture.asset(
                     isDark
-                        ? 'assets/logos/darkLogoWithoutName.svg'
-                        : 'assets/logos/logoWithoutName.svg',
+                        ? AppAssets.darkLogoWithoutName
+                        : AppAssets.logoWithoutName,
                     height: 60.h,
                     fit: BoxFit.contain,
                   ),
@@ -49,9 +50,7 @@ class RegisterPage extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15.sp,
-                    color: isDark
-                        ? AppTheme.darkcolorgray
-                        : AppTheme.lightcolorgray,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
                 v32pad,
@@ -61,9 +60,7 @@ class RegisterPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? AppTheme.darkcolorgray
-                        : AppTheme.lightcolorgray,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
                 v8pad,
@@ -84,9 +81,7 @@ class RegisterPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? AppTheme.darkcolorgray
-                        : AppTheme.lightcolorgray,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
                 v8pad,
@@ -107,9 +102,7 @@ class RegisterPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? AppTheme.darkcolorgray
-                        : AppTheme.lightcolorgray,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
                 v8pad,
