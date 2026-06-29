@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pgb_app/core/theme/app_spacer.dart';
+import 'package:pgb_app/core/theme/app_assets.dart';
 import 'package:pgb_app/features/auth/presentation/pages/register_page.dart';
-import 'package:pgb_app/features/tasks/presentation/pages/tasks_page.dart';
+import 'package:pgb_app/features/main/presentation/pages/main_navigation_page.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
 
-  // A lightweight way to hold UI state in a StatelessWidget
   final ValueNotifier<bool> _obscurePassword = ValueNotifier<bool>(true);
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: SafeArea(
@@ -20,52 +22,53 @@ class LoginPage extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 40.h),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(height: 40.h),
-                // Logo
+                v40pad,
+
                 Center(
                   child: SvgPicture.asset(
                     isDark
-                        ? 'assets/logos/darkLogoWithName.svg'
-                        : 'assets/logos/logoWithName.svg',
-                    height: 80.h,
+                        ? AppAssets.darkLogoWithName
+                        : AppAssets.logoWithName,
+                    height: 100.h,
                     fit: BoxFit.contain,
                   ),
                 ),
-                SizedBox(height: 16.h),
 
-                // Welcome texts
+                v16pad,
+
                 Text(
                   'Welcome back',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 28.sp,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
-                SizedBox(height: 8.h),
+
+                v8pad,
                 Text(
                   'Sign in to start your shift',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15.sp,
-                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
-                SizedBox(height: 40.h),
+                v40pad,
 
-                // Email Field
                 Text(
                   'Email',
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
-                SizedBox(height: 8.h),
+                v8pad,
                 TextFormField(
                   keyboardType: TextInputType.emailAddress,
                   style: TextStyle(
@@ -73,35 +76,30 @@ class LoginPage extends StatelessWidget {
                     fontSize: 15.sp,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'john.doe@example.com',
+                    hintText: 'Enter Your Email',
                     prefixIcon: Icon(Icons.mail_outline_rounded, size: 22.r),
                   ),
                 ),
-                SizedBox(height: 20.h),
+                v16pad,
 
-                // Password Field
                 Text(
                   'Password',
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
-                SizedBox(height: 8.h),
+                v8pad,
 
-                // ValueListenableBuilder listens to _obscurePassword and rebuilds only this field
                 ValueListenableBuilder<bool>(
                   valueListenable: _obscurePassword,
                   builder: (context, isObscured, child) {
                     return TextFormField(
                       obscureText: isObscured,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black,
-                        fontSize: 15.sp,
-                      ),
+                      style: TextStyle(fontSize: 15.sp),
                       decoration: InputDecoration(
-                        hintText: '••••••••',
+                        hintText: 'Enter Your Password',
                         prefixIcon: Icon(
                           Icons.lock_outline_rounded,
                           size: 22.r,
@@ -114,7 +112,6 @@ class LoginPage extends StatelessWidget {
                             size: 22.r,
                           ),
                           onPressed: () {
-                            // Toggle the value, which automatically triggers a rebuild of this widget
                             _obscurePassword.value = !isObscured;
                           },
                         ),
@@ -122,9 +119,8 @@ class LoginPage extends StatelessWidget {
                     );
                   },
                 ),
-                SizedBox(height: 12.h),
+                v16pad,
 
-                // Forgot Password Link
                 Align(
                   alignment: Alignment.centerRight,
                   child: GestureDetector(
@@ -139,14 +135,16 @@ class LoginPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(height: 32.h),
+                v32pad,
 
                 // Sign In Button
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const TasksPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const MainNavigationPage(),
+                      ),
                     );
                   },
                   child: Text(
@@ -158,26 +156,22 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
 
-                SizedBox(height: 24.h),
+                v24pad,
 
-                // Bottom register prompt
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       "Don't have an account? ",
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: isDark
-                            ? Colors.grey.shade400
-                            : Colors.grey.shade600,
-                      ),
+                      style: TextStyle(fontSize: 14.sp),
                     ),
                     GestureDetector(
                       onTap: () {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (context) => RegisterPage()),
+                          MaterialPageRoute(
+                            builder: (context) => RegisterPage(),
+                          ),
                         );
                       },
                       child: Text(
@@ -199,4 +193,3 @@ class LoginPage extends StatelessWidget {
     );
   }
 }
-

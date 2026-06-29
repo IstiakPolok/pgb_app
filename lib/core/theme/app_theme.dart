@@ -2,35 +2,54 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color(0xFF0D9488);
-  static const Color accentColor = Color(0xFF121B22);
-  static const Color lightGray = Color(0xFFF8FAFC);
-  static const Color darkInputColor = Color(0xFF1A242D);
+  // light mode colors = lightcolor
+  static const Color lightcolorbg = Color(0xFFF4F6F8);
+  static const Color lightcolorprimary = Color(0xFF0D9488);
+  static const Color lightcoloraccent = Color(0xFF131A24);
+  static const Color lightcolorlightgray = Color(0xFFF8FAFC);
+  static const Color lightcolordarkinputcolor = Color(0xFF1A242D);
+  static const Color lightcolorgray = Color(0xFF5C6675);
+
+  // dark mode colors = darkcolor
+  static const Color darkcolorbg = Color(0xFF0E1521);
+  static const Color darkcolorprimary = Color(0xFF2DD4BF);
+  static const Color darkcoloraccent = Color(0xFFEEF2F7);
+  static const Color darkcolorlightgray = Color(0xFF98A4B4);
+  static const Color darkcolordarkinputcolor = Color(0x0ff18212);
+  static const Color darkcolorgray = Color(0xFF98A4B4);
+
+  // loctions scren colors
+  static const Color lightcolorprimarylight = Color(0xFFD6F3EF);
+  static const Color darkcolorprimarylight = Color(0xFF123833);
+  static const Color lightcolorinactivebadge = Color(0xFFF1F5F9);
+  static const Color darkcolorinactivebadge = Color(0xFF24303B);
 
   static ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,
-      scaffoldBackgroundColor: lightGray,
-      primaryColor: primaryColor,
+      scaffoldBackgroundColor: lightcolorbg,
+      primaryColor: lightcolorprimary,
       cardColor: Colors.white,
-      
+
       colorScheme: ColorScheme.light(
-        primary: primaryColor,
-        secondary: accentColor,
-        surface: lightGray,
+        primary: lightcolorprimary,
+        secondary: lightcoloraccent,
+        surface: lightcolorbg,
         onSurface: Colors.black,
-        primaryContainer: const Color(0xFFE6F4F2), // Light theme badge background
-        onPrimaryContainer: primaryColor, // Light theme badge text
-        error: const Color(0xFFEF4444), // Danger color
-        outline: Colors.grey.shade200, // Card border color
+        onSurfaceVariant: lightcolorgray,
+        primaryContainer: Colors.white,
+        onPrimaryContainer: lightcolorprimary,
+        error: const Color(0xFFEF4444),
+        outline: Colors.grey.shade200,
       ),
+      dividerColor: Colors.grey.shade200,
 
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: accentColor),
+        iconTheme: const IconThemeData(color: lightcoloraccent),
         titleTextStyle: TextStyle(
-          color: accentColor,
+          color: lightcoloraccent,
           fontSize: 20.sp,
           fontWeight: FontWeight.w600,
         ),
@@ -38,11 +57,11 @@ class AppTheme {
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
+          backgroundColor: lightcolorprimary,
+          foregroundColor: darkcoloraccent,
           minimumSize: Size(double.infinity, 56.h),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
+            borderRadius: BorderRadius.circular(14.r),
           ),
           elevation: 0,
         ),
@@ -65,7 +84,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: BorderSide(color: primaryColor, width: 1.5.r),
+          borderSide: BorderSide(color: lightcolorprimary, width: 1.5.r),
         ),
       ),
     );
@@ -74,27 +93,29 @@ class AppTheme {
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: accentColor,
-      primaryColor: primaryColor,
-      cardColor: darkInputColor,
+      scaffoldBackgroundColor: darkcolorbg,
+      primaryColor: darkcolorprimary,
+      cardColor: darkcolordarkinputcolor,
 
       colorScheme: ColorScheme.dark(
-        primary: primaryColor,
-        secondary: Colors.white,
-        surface: accentColor,
-        onSurface: Colors.white,
-        primaryContainer: const Color(0xFF0F3231), // Dark theme badge background
-        onPrimaryContainer: primaryColor, // Dark theme badge text
-        error: const Color(0xFFEF4444), // Danger color
-        outline: Colors.transparent, // Card border color
+        primary: darkcolorprimary,
+        secondary: darkcoloraccent,
+        surface: darkcolorbg,
+        onSurface: darkcoloraccent,
+        onSurfaceVariant: darkcolorgray,
+        primaryContainer: const Color(0xFF18212F),
+        onPrimaryContainer: darkcolorprimary,
+        error: const Color(0xFFEF4444),
+        outline: Colors.transparent,
       ),
+      dividerColor: const Color(0x14FFFFFF),
 
       appBarTheme: AppBarTheme(
-        backgroundColor: accentColor,
+        backgroundColor: darkcolorbg,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: darkcoloraccent),
         titleTextStyle: TextStyle(
-          color: Colors.white,
+          color: darkcoloraccent,
           fontSize: 20.sp,
           fontWeight: FontWeight.w600,
         ),
@@ -102,8 +123,8 @@ class AppTheme {
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
+          backgroundColor: darkcolorprimary,
+          foregroundColor: darkcolorbg,
           minimumSize: Size(double.infinity, 56.h),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r),
@@ -114,11 +135,11 @@ class AppTheme {
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: darkInputColor,
+        fillColor: darkcolordarkinputcolor,
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-        prefixIconColor: Colors.grey.shade600,
-        suffixIconColor: Colors.grey.shade600,
-        hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 15.sp),
+        prefixIconColor: darkcolorlightgray,
+        suffixIconColor: darkcolorlightgray,
+        hintStyle: TextStyle(color: darkcolorlightgray, fontSize: 15.sp),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: BorderSide.none,
@@ -129,7 +150,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: BorderSide(color: primaryColor, width: 1.5.r),
+          borderSide: BorderSide(color: darkcolorprimary, width: 1.5.r),
         ),
       ),
     );

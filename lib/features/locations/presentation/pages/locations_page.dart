@@ -1,46 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:pgb_app/features/profile/presentation/pages/profile_page.dart';
 import 'package:pgb_app/features/locations/presentation/pages/new_location_page.dart';
 import 'package:pgb_app/features/locations/presentation/pages/edit_location_page.dart';
-import 'package:pgb_app/features/tasks/presentation/pages/tasks_page.dart';
+
+import '../../../../core/theme/app_theme.dart';
 
 class LocationsPage extends StatelessWidget {
   const LocationsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isdark = Theme.of(context).brightness == Brightness.dark;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Custom color mappings based on theme
-    final cardBgColor = theme.cardColor;
-    final cardBorderColor = colorScheme.outline;
-    final textColor = colorScheme.onSurface;
-    final subTextColor = isDark ? Colors.grey.shade400 : Colors.grey.shade600;
-
-    final activeIconBg = isDark
-        ? const Color(0xFF0F3231)
-        : const Color(0xFFE6F4F2);
-    final activeIconColor = const Color(0xFF0D9488);
-    final activeBadgeBg = isDark
-        ? const Color(0xFF132E27)
-        : const Color(0xFFECFDF5);
-    final activeBadgeText = const Color(0xFF10B981);
-
-    final inactiveIconBg = isDark
-        ? const Color(0xFF24303B)
-        : const Color(0xFFF1F5F9);
-    final inactiveIconColor = isDark
-        ? Colors.grey.shade500
-        : Colors.grey.shade600;
-    final inactiveBadgeBg = isDark
-        ? const Color(0xFF24303B)
-        : const Color(0xFFF1F5F9);
-    final inactiveBadgeText = isDark
-        ? Colors.grey.shade400
-        : Colors.grey.shade600;
+    final iconBgColor = isdark
+        ? AppTheme.darkcolorprimarylight
+        : AppTheme.lightcolorprimarylight;
+    final inactiveBadgeBg = isdark
+        ? AppTheme.darkcolorinactivebadge
+        : AppTheme.lightcolorinactivebadge;
 
     final List<Map<String, dynamic>> locations = [
       {
@@ -70,7 +49,6 @@ class LocationsPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Title and top + button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -79,7 +57,7 @@ class LocationsPage extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 28.sp,
                       fontWeight: FontWeight.bold,
-                      color: textColor,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   Container(
@@ -91,7 +69,11 @@ class LocationsPage extends StatelessWidget {
                     ),
                     child: IconButton(
                       padding: EdgeInsets.zero,
-                      icon: Icon(Icons.add, color: Colors.white, size: 20.r),
+                      icon: Icon(
+                        Icons.add,
+                        color: colorScheme.surface,
+                        size: 20.r,
+                      ),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -106,17 +88,17 @@ class LocationsPage extends StatelessWidget {
               ),
               SizedBox(height: 24.h),
 
-              // Search Bar
               TextFormField(
-                style: TextStyle(color: textColor, fontSize: 15.sp),
+                style: TextStyle(color: colorScheme.onSurface, fontSize: 15.sp),
                 decoration: InputDecoration(
+                  filled: true,
+                  fillColor: colorScheme.primaryContainer,
                   hintText: 'Search locations',
                   prefixIcon: Icon(Icons.search, size: 22.r),
                 ),
               ),
               SizedBox(height: 24.h),
 
-              // Locations List
               Expanded(
                 child: ListView.separated(
                   itemCount: locations.length,
@@ -145,33 +127,31 @@ class LocationsPage extends StatelessWidget {
                       child: Container(
                         padding: EdgeInsets.all(16.r),
                         decoration: BoxDecoration(
-                          color: cardBgColor,
+                          color: colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(16.r),
                           border: Border.all(
-                            color: cardBorderColor,
+                            color: colorScheme.outline,
                             width: 1.r,
                           ),
                         ),
                         child: Row(
                           children: [
-                            // Left pin icon container
                             Container(
-                              padding: EdgeInsets.all(10.r),
+                              padding: EdgeInsets.all(8.r),
                               decoration: BoxDecoration(
-                                color: isActive ? activeIconBg : inactiveIconBg,
+                                color: isActive ? iconBgColor : inactiveBadgeBg,
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Icon(
                                 Icons.location_on_outlined,
-                                size: 24.r,
+                                size: 30.r,
                                 color: isActive
-                                    ? activeIconColor
-                                    : inactiveIconColor,
+                                    ? colorScheme.primary
+                                    : colorScheme.onSurfaceVariant,
                               ),
                             ),
                             SizedBox(width: 16.w),
 
-                            // Text Info
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,7 +161,7 @@ class LocationsPage extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 16.sp,
                                       fontWeight: FontWeight.bold,
-                                      color: textColor,
+                                      color: colorScheme.onSurface,
                                     ),
                                   ),
                                   SizedBox(height: 4.h),
@@ -190,32 +170,29 @@ class LocationsPage extends StatelessWidget {
                                       Icon(
                                         Icons.explore_outlined,
                                         size: 14.r,
-                                        color: subTextColor,
+                                        color: colorScheme.onSurfaceVariant,
                                       ),
                                       SizedBox(width: 4.w),
                                       Text(
                                         item['coords'],
                                         style: TextStyle(
                                           fontSize: 13.sp,
-                                          color: subTextColor,
+                                          color: colorScheme.onSurfaceVariant,
                                         ),
                                       ),
                                     ],
                                   ),
                                   SizedBox(height: 8.h),
-                                  // Badges
+
                                   Row(
                                     children: [
-                                      // Radius Badge
                                       Container(
                                         padding: EdgeInsets.symmetric(
                                           horizontal: 8.w,
                                           vertical: 4.h,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: isDark
-                                              ? const Color(0xFF24303B)
-                                              : const Color(0xFFF1F5F9),
+                                          color: colorScheme.surface,
                                           borderRadius: BorderRadius.circular(
                                             6.r,
                                           ),
@@ -225,7 +202,7 @@ class LocationsPage extends StatelessWidget {
                                           style: TextStyle(
                                             fontSize: 11.sp,
                                             fontWeight: FontWeight.w600,
-                                            color: subTextColor,
+                                            color: colorScheme.onSurfaceVariant,
                                           ),
                                         ),
                                       ),
@@ -238,8 +215,8 @@ class LocationsPage extends StatelessWidget {
                                         ),
                                         decoration: BoxDecoration(
                                           color: isActive
-                                              ? activeBadgeBg
-                                              : inactiveBadgeBg,
+                                              ? colorScheme.primary
+                                              : colorScheme.surface,
                                           borderRadius: BorderRadius.circular(
                                             6.r,
                                           ),
@@ -250,8 +227,8 @@ class LocationsPage extends StatelessWidget {
                                             fontSize: 11.sp,
                                             fontWeight: FontWeight.w600,
                                             color: isActive
-                                                ? activeBadgeText
-                                                : inactiveBadgeText,
+                                                ? colorScheme.surface
+                                                : colorScheme.onSurfaceVariant,
                                           ),
                                         ),
                                       ),
@@ -265,9 +242,7 @@ class LocationsPage extends StatelessWidget {
                             Icon(
                               Icons.arrow_forward_ios_rounded,
                               size: 14.r,
-                              color: isDark
-                                  ? Colors.grey.shade600
-                                  : Colors.grey.shade400,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ],
                         ),
@@ -291,62 +266,7 @@ class LocationsPage extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.r),
         ),
-        child: Icon(Icons.add, size: 28.r, color: Colors.white),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: isDark ? Colors.white.withAlpha(13) : Colors.grey.shade200,
-              width: 1.r,
-            ),
-          ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: 1, // Highlight "Locations"
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: isDark ? const Color(0xFF121B22) : Colors.white,
-          selectedItemColor: colorScheme.primary,
-          unselectedItemColor: isDark
-              ? Colors.grey.shade600
-              : Colors.grey.shade400,
-          selectedLabelStyle: TextStyle(
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w600,
-          ),
-          unselectedLabelStyle: TextStyle(fontSize: 12.sp),
-          onTap: (index) {
-            if (index == 0) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const TasksPage()),
-              );
-            } else if (index == 3) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfilePage()),
-              );
-            }
-          },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.list_alt_rounded),
-              label: 'Tasks',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.location_on_outlined),
-              label: 'Locations',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.sync_rounded),
-              label: 'Sync',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_rounded),
-              label: 'Profile',
-            ),
-          ],
-        ),
+        child: Icon(Icons.add, size: 28.r, color: colorScheme.surface),
       ),
     );
   }

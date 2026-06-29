@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pgb_app/core/theme/app_spacer.dart';
+import 'package:pgb_app/core/theme/app_assets.dart';
 import 'package:pgb_app/features/auth/presentation/pages/login_page.dart';
 
 class RegisterPage extends StatelessWidget {
@@ -11,6 +13,7 @@ class RegisterPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: SafeArea(
@@ -18,52 +21,49 @@ class RegisterPage extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 40.h),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(height: 20.h),
-                // Logo
+                v20pad,
                 Center(
                   child: SvgPicture.asset(
                     isDark
-                        ? 'assets/logos/darkLogoWithName.svg'
-                        : 'assets/logos/logoWithName.svg',
-                    height: 80.h,
+                        ? AppAssets.darkLogoWithoutName
+                        : AppAssets.logoWithoutName,
+                    height: 60.h,
                     fit: BoxFit.contain,
                   ),
                 ),
-                SizedBox(height: 16.h),
+                v16pad,
 
-                // Title and Subtitle
                 Text(
                   'Create Account',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 28.sp,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
-                SizedBox(height: 8.h),
+                v8pad,
                 Text(
                   'Sign up to start tracking your shift',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15.sp,
-                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
-                SizedBox(height: 32.h),
+                v32pad,
 
-                // Name Field
                 Text(
                   'Full Name',
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
-                SizedBox(height: 8.h),
+                v8pad,
                 TextFormField(
                   keyboardType: TextInputType.name,
                   style: TextStyle(
@@ -71,22 +71,20 @@ class RegisterPage extends StatelessWidget {
                     fontSize: 15.sp,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'John Doe',
+                    hintText: 'Enter Your Name',
                     prefixIcon: Icon(Icons.person_outline_rounded, size: 22.r),
                   ),
                 ),
-                SizedBox(height: 20.h),
-
-                // Email Field
+                v20pad,
                 Text(
                   'Email',
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
-                SizedBox(height: 8.h),
+                v8pad,
                 TextFormField(
                   keyboardType: TextInputType.emailAddress,
                   style: TextStyle(
@@ -94,22 +92,20 @@ class RegisterPage extends StatelessWidget {
                     fontSize: 15.sp,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'john.doe@example.com',
+                    hintText: 'Enter Your Email',
                     prefixIcon: Icon(Icons.mail_outline_rounded, size: 22.r),
                   ),
                 ),
-                SizedBox(height: 20.h),
-
-                // Password Field
+                v20pad,
                 Text(
                   'Password',
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
-                SizedBox(height: 8.h),
+                v8pad,
                 ValueListenableBuilder<bool>(
                   valueListenable: _obscurePassword,
                   builder: (context, isObscured, child) {
@@ -120,7 +116,7 @@ class RegisterPage extends StatelessWidget {
                         fontSize: 15.sp,
                       ),
                       decoration: InputDecoration(
-                        hintText: '••••••••',
+                        hintText: 'Enter Your Password',
                         prefixIcon: Icon(
                           Icons.lock_outline_rounded,
                           size: 22.r,
@@ -140,9 +136,8 @@ class RegisterPage extends StatelessWidget {
                     );
                   },
                 ),
-                SizedBox(height: 36.h),
+                v36pad,
 
-                // Register Button
                 ElevatedButton(
                   onPressed: () {},
                   child: Text(
@@ -153,9 +148,7 @@ class RegisterPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(height: 24.h),
-
-                // Bottom navigation prompt
+                v24pad,
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

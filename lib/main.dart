@@ -11,17 +11,16 @@ void main() {
 class pgb_app extends StatelessWidget {
   const pgb_app({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(390, 844),
+      designSize: const Size(360, 800),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
         return MaterialApp(
-          title: 'PGB APP',
           debugShowCheckedModeBanner: false,
+          title: 'PGB APP',
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.system,

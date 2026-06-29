@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:pgb_app/features/locations/presentation/pages/locations_page.dart';
-import 'package:pgb_app/features/profile/presentation/pages/profile_page.dart';
 
 class TasksPage extends StatefulWidget {
   const TasksPage({super.key});
@@ -92,10 +90,7 @@ class _TasksPageState extends State<TasksPage> {
               SizedBox(height: 4.h),
               Text(
                 'Monday, Jun 15',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: subTextColor,
-                ),
+                style: TextStyle(fontSize: 14.sp, color: subTextColor),
               ),
               SizedBox(height: 24.h),
 
@@ -137,7 +132,9 @@ class _TasksPageState extends State<TasksPage> {
                       child: LinearProgressIndicator(
                         value: progress,
                         minHeight: 8.h,
-                        backgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
+                        backgroundColor: isDark
+                            ? Colors.grey.shade800
+                            : Colors.grey.shade100,
                         color: colorScheme.primary,
                       ),
                     ),
@@ -169,8 +166,12 @@ class _TasksPageState extends State<TasksPage> {
 
                     // Task badge style
                     final badgeBg = isCompleted
-                        ? (isDark ? const Color(0xFF132E27) : const Color(0xFFECFDF5))
-                        : (isDark ? const Color(0xFF332715) : const Color(0xFFFFFBEB));
+                        ? (isDark
+                              ? const Color(0xFF132E27)
+                              : const Color(0xFFECFDF5))
+                        : (isDark
+                              ? const Color(0xFF332715)
+                              : const Color(0xFFFFFBEB));
                     final badgeText = isCompleted
                         ? const Color(0xFF10B981)
                         : const Color(0xFFD97706);
@@ -190,7 +191,10 @@ class _TasksPageState extends State<TasksPage> {
                         decoration: BoxDecoration(
                           color: cardBgColor,
                           borderRadius: BorderRadius.circular(16.r),
-                          border: Border.all(color: cardBorderColor, width: 1.r),
+                          border: Border.all(
+                            color: cardBorderColor,
+                            width: 1.r,
+                          ),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,9 +205,13 @@ class _TasksPageState extends State<TasksPage> {
                               height: 24.r,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isCompleted ? colorScheme.primary : Colors.transparent,
+                                color: isCompleted
+                                    ? colorScheme.primary
+                                    : Colors.transparent,
                                 border: Border.all(
-                                  color: isCompleted ? colorScheme.primary : Colors.grey.shade400,
+                                  color: isCompleted
+                                      ? colorScheme.primary
+                                      : Colors.grey.shade400,
                                   width: 2.r,
                                 ),
                               ),
@@ -227,7 +235,9 @@ class _TasksPageState extends State<TasksPage> {
                                     style: TextStyle(
                                       fontSize: 16.sp,
                                       fontWeight: FontWeight.bold,
-                                      color: isCompleted ? Colors.grey : textColor,
+                                      color: isCompleted
+                                          ? Colors.grey
+                                          : textColor,
                                       decoration: isCompleted
                                           ? TextDecoration.lineThrough
                                           : TextDecoration.none,
@@ -253,7 +263,9 @@ class _TasksPageState extends State<TasksPage> {
                                       ),
                                       SizedBox(width: 4.w),
                                       Text(
-                                        isCompleted ? task['timeDone'] : task['timeDue'],
+                                        isCompleted
+                                            ? task['timeDone']
+                                            : task['timeDue'],
                                         style: TextStyle(
                                           fontSize: 12.sp,
                                           color: Colors.grey.shade500,
@@ -268,7 +280,9 @@ class _TasksPageState extends State<TasksPage> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: badgeBg,
-                                          borderRadius: BorderRadius.circular(6.r),
+                                          borderRadius: BorderRadius.circular(
+                                            6.r,
+                                          ),
                                         ),
                                         child: Text(
                                           isCompleted ? 'Completed' : 'Pending',
@@ -293,59 +307,6 @@ class _TasksPageState extends State<TasksPage> {
               ),
             ],
           ),
-        ),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: isDark ? Colors.white.withAlpha(13) : Colors.grey.shade200,
-              width: 1.r,
-            ),
-          ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: 0, // Highlight "Tasks"
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: isDark ? const Color(0xFF121B22) : Colors.white,
-          selectedItemColor: colorScheme.primary,
-          unselectedItemColor: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
-          selectedLabelStyle: TextStyle(
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w600,
-          ),
-          unselectedLabelStyle: TextStyle(fontSize: 12.sp),
-          onTap: (index) {
-            if (index == 1) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LocationsPage()),
-              );
-            } else if (index == 3) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfilePage()),
-              );
-            }
-          },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.list_alt_rounded),
-              label: 'Tasks',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.location_on_outlined),
-              label: 'Locations',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.sync_rounded),
-              label: 'Sync',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_rounded),
-              label: 'Profile',
-            ),
-          ],
         ),
       ),
     );
