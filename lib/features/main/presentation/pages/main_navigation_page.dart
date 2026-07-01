@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pgb_app/features/main/presentation/cubit/navigation_cubit.dart';
+import 'package:pgb_app/features/tasks/presentation/pages/tasks_page.dart';
 import 'package:pgb_app/features/locations/presentation/pages/locations_page.dart';
+import 'package:pgb_app/features/sync/presentation/pages/sync_page.dart';
 import 'package:pgb_app/features/profile/presentation/pages/profile_page.dart';
 
 class MainNavigationPage extends StatefulWidget {
@@ -63,9 +65,9 @@ class _MainNavigationPageContent extends StatelessWidget {
   final List<String> labels = const ["Tasks", "Locations", "Sync", "Profile"];
 
   final List<Widget> pages = const [
-    Text("Tasks"),
+    TasksPage(),
     LocationsPage(),
-    Text('Sync'),
+    SyncPage(),
     ProfilePage(),
   ];
 

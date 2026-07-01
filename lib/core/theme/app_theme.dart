@@ -15,7 +15,7 @@ class AppTheme {
   static const Color darkcolorprimary = Color(0xFF2DD4BF);
   static const Color darkcoloraccent = Color(0xFFEEF2F7);
   static const Color darkcolorlightgray = Color(0xFF98A4B4);
-  static const Color darkcolordarkinputcolor = Color(0x0ff18212);
+  static const Color darkcolordarkinputcolor = Color(0x0ff18212F);
   static const Color darkcolorgray = Color(0xFF98A4B4);
 
   // loctions scren colors

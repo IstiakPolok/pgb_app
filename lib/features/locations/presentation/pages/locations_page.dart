@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pgb_app/features/locations/presentation/pages/new_location_page.dart';
+import 'package:pgb_app/features/locations/presentation/pages/edit_location_page.dart';
 
 import '../../../../core/theme/app_theme.dart';
 
@@ -72,7 +74,14 @@ class LocationsPage extends StatelessWidget {
                         color: colorScheme.surface,
                         size: 20.r,
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NewLocationPage(),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -99,7 +108,22 @@ class LocationsPage extends StatelessWidget {
                     final bool isActive = item['isActive'];
 
                     return GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        final radiusVal =
+                            double.tryParse(item['radius'].split(' ').first) ??
+                            150.0;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditLocationPage(
+                              initialName: item['name'],
+                              initialCoords: item['coords'],
+                              initialRadius: radiusVal,
+                              initialIsActive: isActive,
+                            ),
+                          ),
+                        );
+                      },
                       child: Container(
                         padding: EdgeInsets.all(16.r),
                         decoration: BoxDecoration(
@@ -232,7 +256,12 @@ class LocationsPage extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const NewLocationPage()),
+          );
+        },
         backgroundColor: colorScheme.primary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.r),
