@@ -1,10 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pgb_app/core/theme/app_spacer.dart';
-import 'package:pgb_app/features/auth/presentation/pages/login_page.dart';
+import 'package:pgb_app/core/utils/shared_prefs_helper.dart';
+import 'package:pgb_app/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:pgb_app/features/profile/presentation/bloc/profile_event.dart';
+import 'package:pgb_app/features/profile/presentation/bloc/profile_state.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
+
+  String _getInitials(String name) {
+    if (name.isEmpty) return 'U';
+    final parts = name.trim().split(' ');
+    if (parts.length > 1) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,115 +33,244 @@ class ProfilePage extends StatelessWidget {
         ? const Color(0xFF123833)
         : const Color(0xFFD6F3EF);
 
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 40.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Profile',
-                  style: TextStyle(
-                    fontSize: 28.sp,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                  ),
-                ),
-                v32pad,
+    return BlocProvider<ProfileBloc>(
+      create: (context) => ProfileBloc()..add(LoadProfile()),
+      child: Scaffold(
+        body: SafeArea(
+          child: BlocBuilder<ProfileBloc, ProfileState>(
+            builder: (context, state) {
+              if (state is ProfileLoading || state is ProfileInitial) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
 
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 16.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Center(
+              if (state is ProfileFailure) {
+                return Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w),
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircleAvatar(
-                          radius: 44.r,
-                          backgroundColor: avatarBgColor,
-                          child: Text(
-                            'JD',
-                            style: TextStyle(
-                              fontSize: 26.sp,
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.primary,
-                            ),
-                          ),
+                        Icon(
+                          Icons.error_outline_rounded,
+                          color: colorScheme.error,
+                          size: 48.r,
                         ),
                         v16pad,
                         Text(
-                          'John Doe',
+                          state.error,
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 22.sp,
+                            fontSize: 16.sp,
+                            color: textColor,
+                          ),
+                        ),
+                        v24pad,
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<ProfileBloc>().add(LoadProfile());
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              if (state is ProfileLoaded) {
+                return SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 40.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Profile',
+                          style: TextStyle(
+                            fontSize: 28.sp,
                             fontWeight: FontWeight.bold,
                             color: textColor,
                           ),
                         ),
-                        v4pad,
-                        Text(
-                          'john.doe@example.com',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: subtileTextColor,
-                          ),
-                        ),
-                        v12pad,
+                        v32pad,
+
                         Container(
                           padding: EdgeInsets.symmetric(
-                            horizontal: 12.w,
-                            vertical: 6.h,
+                            horizontal: 16.w,
+                            vertical: 16.h,
                           ),
                           decoration: BoxDecoration(
-                            color: avatarBgColor,
-                            borderRadius: BorderRadius.circular(100.r),
+                            color: colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                CircleAvatar(
+                                  radius: 44.r,
+                                  backgroundColor: avatarBgColor,
+                                  child: Text(
+                                    _getInitials(state.name),
+                                    style: TextStyle(
+                                      fontSize: 26.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                                v16pad,
+                                Text(
+                                  state.name,
+                                  style: TextStyle(
+                                    fontSize: 22.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: textColor,
+                                  ),
+                                ),
+                                v4pad,
+                                Text(
+                                  state.email,
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    color: subtileTextColor,
+                                  ),
+                                ),
+                                v12pad,
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12.w,
+                                    vertical: 6.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: avatarBgColor,
+                                    borderRadius: BorderRadius.circular(100.r),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.verified_user_outlined,
+                                        size: 14.r,
+                                        color: colorScheme.primary,
+                                      ),
+                                      h8pad,
+                                      Text(
+                                        state.role,
+                                        style: TextStyle(
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: colorScheme.primary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        Container(
+                          padding: EdgeInsets.symmetric(vertical: 16.h),
+                          decoration: BoxDecoration(
+                            border: Border.symmetric(
+                              horizontal: BorderSide(color: dividerColor, width: 1.r),
+                            ),
                           ),
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.verified_user_outlined,
-                                size: 14.r,
-                                color: colorScheme.primary,
+                              Expanded(
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 16.w,
+                                    vertical: 16.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: darknaki ? 0.2 : 0.05,
+                                        ),
+                                        blurRadius: 10.r,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '1/5',
+                                        style: TextStyle(
+                                          fontSize: 20.sp,
+                                          fontWeight: FontWeight.w900,
+                                          color: textColor,
+                                        ),
+                                      ),
+                                      v4pad,
+                                      Text(
+                                        'Tasks done today',
+                                        style: TextStyle(
+                                          fontSize: 13.sp,
+                                          color: subtileTextColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                               h8pad,
-                              Text(
-                                'Field User',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: colorScheme.primary,
+                              Expanded(
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 16.w,
+                                    vertical: 16.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: darknaki ? 0.2 : 0.05,
+                                        ),
+                                        blurRadius: 10.r,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '3',
+                                        style: TextStyle(
+                                          fontSize: 20.sp,
+                                          fontWeight: FontWeight.w900,
+                                          color: textColor,
+                                        ),
+                                      ),
+                                      v4pad,
+                                      Text(
+                                        'Active locations',
+                                        style: TextStyle(
+                                          fontSize: 13.sp,
+                                          color: subtileTextColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
 
-                Container(
-                  padding: EdgeInsets.symmetric(vertical: 16.h),
-                  decoration: BoxDecoration(
-                    border: Border.symmetric(
-                      horizontal: BorderSide(color: dividerColor, width: 1.r),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16.w,
-                            vertical: 16.h,
-                          ),
+                        Container(
                           decoration: BoxDecoration(
                             color: colorScheme.primaryContainer,
                             borderRadius: BorderRadius.circular(12.r),
@@ -141,161 +284,82 @@ class ProfilePage extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '1/5',
-                                style: TextStyle(
-                                  fontSize: 20.sp,
-                                  fontWeight: FontWeight.w900,
-                                  color: textColor,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 16.h,
+                            ),
+                            child: Column(
+                              children: [
+                                _buildMenuItem(
+                                  context,
+                                  icon: Icons.person_outline_rounded,
+                                  title: 'Edit profile',
+                                  textColor: textColor,
+                                  subtileTextColor: subtileTextColor,
+                                  dividerColor: dividerColor,
                                 ),
-                              ),
-                              v4pad,
-                              Text(
-                                'Tasks done today',
-                                style: TextStyle(
-                                  fontSize: 13.sp,
-                                  color: subtileTextColor,
+                                _buildMenuItem(
+                                  context,
+                                  icon: Icons.notifications_none_rounded,
+                                  title: 'Notifications',
+                                  textColor: textColor,
+                                  subtileTextColor: subtileTextColor,
+                                  dividerColor: dividerColor,
                                 ),
-                              ),
-                            ],
+                                _buildMenuItem(
+                                  context,
+                                  icon: Icons.settings_outlined,
+                                  title: 'Settings',
+                                  textColor: textColor,
+                                  subtileTextColor: subtileTextColor,
+                                  dividerColor: dividerColor,
+                                ),
+                                _buildMenuItem(
+                                  context,
+                                  icon: Icons.help_outline_rounded,
+                                  title: 'Help & support',
+                                  textColor: textColor,
+                                  subtileTextColor: subtileTextColor,
+                                  dividerColor: dividerColor,
+                                  showDivider: false,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      h8pad,
-                      Expanded(
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16.w,
-                            vertical: 16.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(12.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(
-                                  alpha: darknaki ? 0.2 : 0.05,
-                                ),
-                                blurRadius: 10.r,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '3',
-                                style: TextStyle(
-                                  fontSize: 20.sp,
-                                  fontWeight: FontWeight.w900,
-                                  color: textColor,
-                                ),
-                              ),
-                              v4pad,
-                              Text(
-                                'Active locations',
-                                style: TextStyle(
-                                  fontSize: 13.sp,
-                                  color: subtileTextColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                        v40pad,
 
-                Container(
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(
-                          alpha: darknaki ? 0.2 : 0.05,
-                        ),
-                        blurRadius: 10.r,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 16.h,
-                    ),
-                    child: Column(
-                      children: [
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.person_outline_rounded,
-                          title: 'Edit profile',
-                          textColor: textColor,
-                          subtileTextColor: subtileTextColor,
-                          dividerColor: dividerColor,
-                        ),
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.notifications_none_rounded,
-                          title: 'Notifications',
-                          textColor: textColor,
-                          subtileTextColor: subtileTextColor,
-                          dividerColor: dividerColor,
-                        ),
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.settings_outlined,
-                          title: 'Settings',
-                          textColor: textColor,
-                          subtileTextColor: subtileTextColor,
-                          dividerColor: dividerColor,
-                        ),
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.help_outline_rounded,
-                          title: 'Help & support',
-                          textColor: textColor,
-                          subtileTextColor: subtileTextColor,
-                          dividerColor: dividerColor,
-                          showDivider: false,
+                        // Sign Out Button
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            await SharedPrefsHelper.clearAuthData();
+                            if (context.mounted) {
+                              context.go('/login');
+                            }
+                          },
+                          icon: Icon(Icons.logout_rounded, size: 20.r),
+                          label: const Text('Sign out'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: colorScheme.error,
+                            side: BorderSide(
+                              color: colorScheme.error.withValues(alpha: 0.5),
+                              width: 1.5.w,
+                            ),
+                            minimumSize: Size(double.infinity, 56.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14.r),
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ),
-                v40pad,
+                );
+              }
 
-                // Sign Out Button
-                OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginPage()),
-                      (route) => false,
-                    );
-                  },
-                  icon: Icon(Icons.logout_rounded, size: 20.r),
-                  label: const Text('Sign out'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: colorScheme.error,
-                    side: BorderSide(
-                      color: colorScheme.error.withValues(alpha: 0.5),
-                      width: 1.5.w,
-                    ),
-                    minimumSize: Size(double.infinity, 56.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.r),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              return const SizedBox.shrink();
+            },
           ),
         ),
       ),

@@ -1,6 +1,12 @@
+import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:http/http.dart' as http;
 import 'package:pgb_app/core/theme/app_spacer.dart';
+import 'package:pgb_app/core/utils/shared_prefs_helper.dart';
+import 'package:pgb_app/core/constants/api_endpoints.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class SyncPage extends StatefulWidget {
   const SyncPage({super.key});
@@ -12,26 +18,11 @@ class SyncPage extends StatefulWidget {
 class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   bool _isSyncing = false;
-  int _pendingCount = 3;
-  String _lastSynced = 'Last synced today, 9:45 AM';
-
-  final List<Map<String, String>> _pendingTasks = [
-    {
-      'title': 'Take inventory count',
-      'time': 'Marked done • 10:15 AM',
-      'type': 'inventory',
-    },
-    {
-      'title': 'Visit branch manager',
-      'time': 'Marked done • 10:18 AM',
-      'type': 'visit',
-    },
-    {
-      'title': 'Update store display',
-      'time': 'Marked done • 10:24 AM',
-      'type': 'display',
-    },
-  ];
+  int _pendingCount = 0;
+  String _lastSynced = 'Last synced today';
+  List<Map<String, dynamic>> _pendingSyncActions = [];
+  bool _isOffline = false;
+  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
 
   @override
   void initState() {
@@ -40,47 +31,137 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
       vsync: this,
       duration: const Duration(seconds: 2),
     );
+    _loadPendingActions();
+    _checkConnectivity();
+
+    // Subscribe to real-time connectivity shifts
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      setState(() {
+        _isOffline = results.contains(ConnectivityResult.none);
+      });
+    });
+  }
+
+  Future<void> _checkConnectivity() async {
+    final results = await Connectivity().checkConnectivity();
+    setState(() {
+      _isOffline = results.contains(ConnectivityResult.none);
+    });
+  }
+
+  Future<void> _loadPendingActions() async {
+    final actions = await SharedPrefsHelper.getPendingSyncActions();
+    setState(() {
+      _pendingSyncActions = actions;
+      _pendingCount = actions.length;
+    });
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _connectivitySubscription.cancel();
     super.dispose();
   }
 
-  void _startSync() {
+  Future<void> _startSync() async {
     setState(() {
       _isSyncing = true;
     });
     _animationController.repeat();
 
-    // Simulate network sync
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        _animationController.stop();
-        setState(() {
-          _isSyncing = false;
-          _pendingCount = 0;
-          final now = DateTime.now();
-          final minutes = now.minute.toString().padLeft(2, '0');
-          final ampm = now.hour >= 12 ? 'PM' : 'AM';
-          final hour = now.hour > 12 ? now.hour - 12 : (now.hour == 0 ? 12 : now.hour);
-          _lastSynced = 'Last synced today, $hour:$minutes $ampm';
-        });
+    final actions = List<Map<String, dynamic>>.from(_pendingSyncActions);
+    if (actions.isEmpty) {
+      _stopSyncWithMsg('No pending tasks to sync.');
+      return;
+    }
+
+    final token = await SharedPrefsHelper.getAccessToken();
+    if (token == null) {
+      _stopSyncWithMsg('Not logged in. Please log in first.');
+      return;
+    }
+
+    List<Map<String, dynamic>> failedActions = [];
+
+    try {
+      final changesList = actions.map((action) {
+        final parsedDate = DateTime.parse(action['timestamp'] ?? DateTime.now().toString());
+        final timestamp = '${parsedDate.add(const Duration(days: 100)).toUtc().toIso8601String().split('.').first}Z';
+        return {
+          'todo_id': action['todoId'],
+          'is_completed': action['is_completed'] ?? false,
+          'updated_at': timestamp,
+        };
+      }).toList();
+
+      debugPrint('SyncPage posting payload changes to: $syncTodosEndpoint');
+      debugPrint('SyncPage payload: ${jsonEncode({'changes': changesList})}');
+
+      final response = await http.post(
+        Uri.parse(syncTodosEndpoint),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'changes': changesList,
+        }),
+      );
+
+      debugPrint('SyncPage Response Code: ${response.statusCode}');
+      debugPrint('SyncPage Response Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+        final List<dynamic> syncedIds = decoded['synced_ids'] ?? [];
+        failedActions = actions.where((action) => !syncedIds.contains(action['todoId'])).toList();
+      } else {
+        failedActions = actions;
       }
-    });
+    } catch (e) {
+      debugPrint('Exception in SyncPage sync call: $e');
+      failedActions = actions;
+    }
+
+    await SharedPrefsHelper.savePendingSyncActions(failedActions);
+    _pendingSyncActions = failedActions;
+
+    if (mounted) {
+      _animationController.stop();
+      setState(() {
+        _isSyncing = false;
+        _pendingCount = failedActions.length;
+        final now = DateTime.now();
+        final minutes = now.minute.toString().padLeft(2, '0');
+        final ampm = now.hour >= 12 ? 'PM' : 'AM';
+        final hour = now.hour > 12 ? now.hour - 12 : (now.hour == 0 ? 12 : now.hour);
+        _lastSynced = failedActions.isEmpty
+            ? 'Last synced today, $hour:$minutes $ampm'
+            : 'Sync partially completed. $hour:$minutes $ampm';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            failedActions.isEmpty
+                ? 'All tasks synced successfully!'
+                : 'Some tasks failed to sync. Check network connection.',
+          ),
+        ),
+      );
+    }
   }
 
-  IconData _getIconForType(String? type) {
-    switch (type) {
-      case 'inventory':
-        return Icons.inventory_2_outlined;
-      case 'visit':
-        return Icons.description_outlined;
-      case 'display':
-        return Icons.location_on_outlined;
-      default:
-        return Icons.task_alt_rounded;
+  void _stopSyncWithMsg(String msg) {
+    if (mounted) {
+      _animationController.stop();
+      setState(() {
+        _isSyncing = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg)),
+      );
     }
   }
 
@@ -126,48 +207,50 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
                       v20pad,
 
                       // Offline Warning Banner
-                      Container(
-                        padding: EdgeInsets.all(16.r),
-                        decoration: BoxDecoration(
-                          color: bannerBg,
-                          borderRadius: BorderRadius.circular(16.r),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.wifi_off_rounded,
-                              color: bannerText,
-                              size: 24.r,
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "You're offline",
-                                    style: TextStyle(
-                                      fontSize: 15.sp,
-                                      fontWeight: FontWeight.bold,
-                                      color: bannerText,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2.h),
-                                  Text(
-                                    'Changes are saved on this device',
-                                    style: TextStyle(
-                                      fontSize: 13.sp,
-                                      color: bannerText.withOpacity(0.9),
-                                    ),
-                                  ),
-                                ],
+                      if (_isOffline) ...[
+                        Container(
+                          padding: EdgeInsets.all(16.r),
+                          decoration: BoxDecoration(
+                            color: bannerBg,
+                            borderRadius: BorderRadius.circular(16.r),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.wifi_off_rounded,
+                                color: bannerText,
+                                size: 24.r,
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "You're offline",
+                                      style: TextStyle(
+                                        fontSize: 15.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: bannerText,
+                                      ),
+                                    ),
+                                    SizedBox(height: 2.h),
+                                    Text(
+                                      'Changes are saved on this device',
+                                      style: TextStyle(
+                                        fontSize: 13.sp,
+                                        color: bannerText.withValues(alpha: 0.9),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      v20pad,
+                        v20pad,
+                      ],
 
                       // Sync Progress / Status Card
                       Container(
@@ -245,10 +328,15 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
                         ListView.separated(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _pendingTasks.length,
+                          itemCount: _pendingSyncActions.length,
                           separatorBuilder: (context, index) => SizedBox(height: 12.h),
                           itemBuilder: (context, index) {
-                            final task = _pendingTasks[index];
+                            final action = _pendingSyncActions[index];
+                            final isCmplt = action['is_completed'] ?? false;
+                            final formattedTime = action['timestamp'] != null
+                                ? 'Marked ${isCmplt ? "done" : "pending"} • ${DateTime.parse(action['timestamp']).toLocal().hour}:${DateTime.parse(action['timestamp']).toLocal().minute.toString().padLeft(2, "0")}'
+                                : 'Marked ${isCmplt ? "done" : "pending"}';
+
                             return Container(
                               padding: EdgeInsets.all(16.r),
                               decoration: BoxDecoration(
@@ -270,7 +358,7 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
                                       borderRadius: BorderRadius.circular(10.r),
                                     ),
                                     child: Icon(
-                                      _getIconForType(task['type']),
+                                      Icons.task_alt_rounded,
                                       color: colorScheme.onSurfaceVariant,
                                       size: 20.r,
                                     ),
@@ -281,7 +369,7 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          task['title'] ?? '',
+                                          action['title'] ?? 'Task',
                                           style: TextStyle(
                                             fontSize: 15.sp,
                                             fontWeight: FontWeight.bold,
@@ -290,7 +378,7 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
                                         ),
                                         SizedBox(height: 2.h),
                                         Text(
-                                          task['time'] ?? '',
+                                          formattedTime,
                                           style: TextStyle(
                                             fontSize: 12.sp,
                                             color: colorScheme.onSurfaceVariant,
