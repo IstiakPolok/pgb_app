@@ -15,7 +15,8 @@ class SyncPage extends StatefulWidget {
   State<SyncPage> createState() => _SyncPageState();
 }
 
-class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin {
+class _SyncPageState extends State<SyncPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   bool _isSyncing = false;
   int _pendingCount = 0;
@@ -35,7 +36,9 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
     _checkConnectivity();
 
     // Subscribe to real-time connectivity shifts
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+      List<ConnectivityResult> results,
+    ) {
       setState(() {
         _isOffline = results.contains(ConnectivityResult.none);
       });
@@ -50,7 +53,7 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
   }
 
   Future<void> _loadPendingActions() async {
-    final actions = await SharedPrefsHelper.getPendingSyncActions();
+    final actions = await SharedPrefsHelper.getPendingSync();
     setState(() {
       _pendingSyncActions = actions;
       _pendingCount = actions.length;
@@ -86,8 +89,11 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
 
     try {
       final changesList = actions.map((action) {
-        final parsedDate = DateTime.parse(action['timestamp'] ?? DateTime.now().toString());
-        final timestamp = '${parsedDate.add(const Duration(days: 100)).toUtc().toIso8601String().split('.').first}Z';
+        final parsedDate = DateTime.parse(
+          action['timestamp'] ?? DateTime.now().toString(),
+        );
+        final timestamp =
+            '${parsedDate.add(const Duration(days: 100)).toUtc().toIso8601String().split('.').first}Z';
         return {
           'todo_id': action['todoId'],
           'is_completed': action['is_completed'] ?? false,
@@ -95,18 +101,16 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
         };
       }).toList();
 
-      debugPrint('SyncPage posting payload changes to: $syncTodosEndpoint');
+      debugPrint('SyncPage posting payload changes to: $syncTodosURL');
       debugPrint('SyncPage payload: ${jsonEncode({'changes': changesList})}');
 
       final response = await http.post(
-        Uri.parse(syncTodosEndpoint),
+        Uri.parse(syncTodosURL),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode({
-          'changes': changesList,
-        }),
+        body: jsonEncode({'changes': changesList}),
       );
 
       debugPrint('SyncPage Response Code: ${response.statusCode}');
@@ -115,7 +119,9 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
       if (response.statusCode == 200 || response.statusCode == 201) {
         final decoded = jsonDecode(response.body);
         final List<dynamic> syncedIds = decoded['synced_ids'] ?? [];
-        failedActions = actions.where((action) => !syncedIds.contains(action['todoId'])).toList();
+        failedActions = actions
+            .where((action) => !syncedIds.contains(action['todoId']))
+            .toList();
       } else {
         failedActions = actions;
       }
@@ -124,7 +130,7 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
       failedActions = actions;
     }
 
-    await SharedPrefsHelper.savePendingSyncActions(failedActions);
+    await SharedPrefsHelper.savePendingSync(failedActions);
     _pendingSyncActions = failedActions;
 
     if (mounted) {
@@ -135,7 +141,9 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
         final now = DateTime.now();
         final minutes = now.minute.toString().padLeft(2, '0');
         final ampm = now.hour >= 12 ? 'PM' : 'AM';
-        final hour = now.hour > 12 ? now.hour - 12 : (now.hour == 0 ? 12 : now.hour);
+        final hour = now.hour > 12
+            ? now.hour - 12
+            : (now.hour == 0 ? 12 : now.hour);
         _lastSynced = failedActions.isEmpty
             ? 'Last synced today, $hour:$minutes $ampm'
             : 'Sync partially completed. $hour:$minutes $ampm';
@@ -159,9 +167,7 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
       setState(() {
         _isSyncing = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg)),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
 
@@ -173,14 +179,20 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
 
     // Theme values for offline banner
     final bannerBg = isDark ? const Color(0xFF2E220F) : const Color(0xFFFEF3C7);
-    final bannerText = isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309);
+    final bannerText = isDark
+        ? const Color(0xFFFBBF24)
+        : const Color(0xFFB45309);
 
     // Badge styling
     final badgeBg = isDark ? const Color(0xFF2D2115) : const Color(0xFFFFFBEB);
-    final badgeText = isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
+    final badgeText = isDark
+        ? const Color(0xFFFBBF24)
+        : const Color(0xFFD97706);
 
     // Sync icon background circle
-    final syncIconCircleBg = isDark ? const Color(0xFF132D2A) : const Color(0xFFE6F4F1);
+    final syncIconCircleBg = isDark
+        ? const Color(0xFF132D2A)
+        : const Color(0xFFE6F4F1);
 
     return Scaffold(
       body: SafeArea(
@@ -191,7 +203,10 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 24.w,
+                    vertical: 24.h,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -240,7 +255,9 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
                                       'Changes are saved on this device',
                                       style: TextStyle(
                                         fontSize: 13.sp,
-                                        color: bannerText.withValues(alpha: 0.9),
+                                        color: bannerText.withValues(
+                                          alpha: 0.9,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -299,7 +316,9 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
                                   ),
                                   SizedBox(height: 2.h),
                                   Text(
-                                    _isSyncing ? 'Syncing data now...' : _lastSynced,
+                                    _isSyncing
+                                        ? 'Syncing data now...'
+                                        : _lastSynced,
                                     style: TextStyle(
                                       fontSize: 13.sp,
                                       color: colorScheme.onSurfaceVariant,
@@ -329,7 +348,8 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: _pendingSyncActions.length,
-                          separatorBuilder: (context, index) => SizedBox(height: 12.h),
+                          separatorBuilder: (context, index) =>
+                              SizedBox(height: 12.h),
                           itemBuilder: (context, index) {
                             final action = _pendingSyncActions[index];
                             final isCmplt = action['is_completed'] ?? false;
@@ -354,7 +374,9 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
                                     width: 40.r,
                                     height: 40.r,
                                     decoration: BoxDecoration(
-                                      color: isDark ? const Color(0xFF131B26) : const Color(0xFFF1F5F9),
+                                      color: isDark
+                                          ? const Color(0xFF131B26)
+                                          : const Color(0xFFF1F5F9),
                                       borderRadius: BorderRadius.circular(10.r),
                                     ),
                                     child: Icon(
@@ -366,7 +388,8 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
                                   SizedBox(width: 12.w),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           action['title'] ?? 'Task',
@@ -389,7 +412,10 @@ class _SyncPageState extends State<SyncPage> with SingleTickerProviderStateMixin
                                   ),
                                   // Pending Badge
                                   Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 8.w,
+                                      vertical: 4.h,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: badgeBg,
                                       borderRadius: BorderRadius.circular(6.r),

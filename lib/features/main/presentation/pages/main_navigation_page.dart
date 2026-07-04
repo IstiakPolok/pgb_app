@@ -7,15 +7,15 @@ import 'package:pgb_app/features/locations/presentation/pages/locations_page.dar
 import 'package:pgb_app/features/sync/presentation/pages/sync_page.dart';
 import 'package:pgb_app/features/profile/presentation/pages/profile_page.dart';
 
-class MainNavigationPage extends StatefulWidget {
+class navBar extends StatefulWidget {
   final int initialIndex;
-  const MainNavigationPage({super.key, this.initialIndex = 0});
+  const navBar({super.key, this.initialIndex = 0});
 
   @override
-  State<MainNavigationPage> createState() => _MainNavigationPageState();
+  State<navBar> createState() => _navBarState();
 }
 
-class _MainNavigationPageState extends State<MainNavigationPage> {
+class _navBarState extends State<navBar> {
   late PageController _pageController;
 
   @override
@@ -45,15 +45,15 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             );
           }
         },
-        child: _MainNavigationPageContent(pageController: _pageController),
+        child: _navBarContent(pageController: _pageController),
       ),
     );
   }
 }
 
-class _MainNavigationPageContent extends StatelessWidget {
+class _navBarContent extends StatelessWidget {
   final PageController pageController;
-  const _MainNavigationPageContent({required this.pageController});
+  const _navBarContent({required this.pageController});
 
   final List<IconData> icons = const [
     Icons.format_list_bulleted_rounded,

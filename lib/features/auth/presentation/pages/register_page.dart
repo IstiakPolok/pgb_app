@@ -43,7 +43,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Registration successful!')),
             );
-            // Navigate to main/navigation screen
+            // going to nav screen
             context.go('/nav');
           } else if (state is AuthFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -248,6 +248,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 : Colors.grey.shade600,
                           ),
                         ),
+                        // goto login scren
                         GestureDetector(
                           onTap: () {
                             context.go('/login');

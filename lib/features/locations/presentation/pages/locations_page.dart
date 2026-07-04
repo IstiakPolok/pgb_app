@@ -16,8 +16,8 @@ class LocationsPage extends StatefulWidget {
 }
 
 class _LocationsPageState extends State<LocationsPage> {
-  String _searchQuery = '';
-  final _searchController = TextEditingController();
+  String _srchQury = '';
+  final _srchCtrl = TextEditingController();
 
   String _formatCoords(String coords) {
     final parts = coords.split(',');
@@ -30,7 +30,7 @@ class _LocationsPageState extends State<LocationsPage> {
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _srchCtrl.dispose();
     super.dispose();
   }
 
@@ -40,10 +40,10 @@ class _LocationsPageState extends State<LocationsPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final iconBgColor = isdark
+    final iconBgcolor = isdark
         ? AppTheme.darkcolorprimarylight
         : AppTheme.lightcolorprimarylight;
-    final inactiveBadgeBg = isdark
+    final inactiveBg = isdark
         ? AppTheme.darkcolorinactivebadge
         : AppTheme.lightcolorinactivebadge;
 
@@ -92,9 +92,9 @@ class _LocationsPageState extends State<LocationsPage> {
               }
 
               if (state is LocationsLoaded) {
-                final filteredLocations = state.locations.where((loc) {
+                final fltrLoc = state.locations.where((loc) {
                   final name = (loc['name'] as String).toLowerCase();
-                  return name.contains(_searchQuery.toLowerCase());
+                  return name.contains(_srchQury.toLowerCase());
                 }).toList();
 
                 return Padding(
@@ -149,14 +149,14 @@ class _LocationsPageState extends State<LocationsPage> {
                       SizedBox(height: 24.h),
 
                       TextFormField(
-                        controller: _searchController,
+                        controller: _srchCtrl,
                         style: TextStyle(
                           color: colorScheme.onSurface,
                           fontSize: 15.sp,
                         ),
                         onChanged: (val) {
                           setState(() {
-                            _searchQuery = val;
+                            _srchQury = val;
                           });
                         },
                         decoration: InputDecoration(
@@ -173,7 +173,7 @@ class _LocationsPageState extends State<LocationsPage> {
                           onRefresh: () async {
                             context.read<LocationsBloc>().add(LoadLocations());
                           },
-                          child: filteredLocations.isEmpty
+                          child: fltrLoc.isEmpty
                               ? ListView(
                                   children: [
                                     SizedBox(height: 100.h),
@@ -189,11 +189,11 @@ class _LocationsPageState extends State<LocationsPage> {
                                   ],
                                 )
                               : ListView.separated(
-                                  itemCount: filteredLocations.length,
+                                  itemCount: fltrLoc.length,
                                   separatorBuilder: (context, index) =>
                                       SizedBox(height: 16.h),
                                   itemBuilder: (context, index) {
-                                    final item = filteredLocations[index];
+                                    final item = fltrLoc[index];
                                     final bool isActive =
                                         item['isActive'] ?? false;
 
@@ -213,13 +213,11 @@ class _LocationsPageState extends State<LocationsPage> {
                                                 BlocProvider.value(
                                                   value: locationsBloc,
                                                   child: EditLocationPage(
-                                                    locationId:
-                                                        item['id'] ?? '',
+                                                    locId: item['id'] ?? '',
                                                     initialName: item['name'],
-                                                    initialCoords:
-                                                        item['coords'],
-                                                    initialRadius: radiusVal,
-                                                    initialIsActive: isActive,
+                                                    codi: item['coords'],
+                                                    locRadius: radiusVal,
+                                                    locActive: isActive,
                                                   ),
                                                 ),
                                           ),
@@ -243,8 +241,8 @@ class _LocationsPageState extends State<LocationsPage> {
                                               padding: EdgeInsets.all(8.r),
                                               decoration: BoxDecoration(
                                                 color: isActive
-                                                    ? iconBgColor
-                                                    : inactiveBadgeBg,
+                                                    ? iconBgcolor
+                                                    : inactiveBg,
                                                 borderRadius:
                                                     BorderRadius.circular(12.r),
                                               ),

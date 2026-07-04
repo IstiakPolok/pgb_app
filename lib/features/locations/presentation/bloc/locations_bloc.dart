@@ -14,7 +14,7 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
       debugPrint('LocationsBloc: LoadLocations started');
 
       // 1. Read cached locations first to display immediately
-      final cached = await SharedPrefsHelper.getCachedLocations();
+      final cached = await SharedPrefsHelper.getLocations();
       if (cached.isNotEmpty) {
         debugPrint('LocationsBloc: Emitting ${cached.length} cached locations');
         emit(LocationsLoaded(locations: cached));
@@ -22,13 +22,13 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
 
       // 2. Query endpoint to fetch fresh data
       try {
-        final response = await ApiClient.get(locationsEndpoint);
+        final rspns = await ApiClient.get(locationsURL);
 
-        debugPrint('LocationsBloc Status Code: ${response.statusCode}');
-        debugPrint('LocationsBloc Response Body: ${response.body}');
+        debugPrint('LocationsBloc Status Code: ${rspns.statusCode}');
+        debugPrint('LocationsBloc rspns Body: ${rspns.body}');
 
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          final decoded = jsonDecode(response.body);
+        if (rspns.statusCode == 200 || rspns.statusCode == 201) {
+          final decoded = jsonDecode(rspns.body);
           final List<dynamic> dataList = decoded['data'] ?? [];
 
           final List<Map<String, dynamic>> mappedLocations = dataList.map((
@@ -49,11 +49,11 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
           }).toList();
 
           // Save to local cache
-          await SharedPrefsHelper.saveCachedLocations(mappedLocations);
+          await SharedPrefsHelper.saveLocations(mappedLocations);
           emit(LocationsLoaded(locations: mappedLocations));
         } else {
           if (cached.isEmpty) {
-            final errorData = jsonDecode(response.body);
+            final errorData = jsonDecode(rspns.body);
             String errorMessage = 'Failed to load locations';
             if (errorData is Map) {
               if (errorData['error'] is Map &&
@@ -68,16 +68,20 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
         }
       } catch (e) {
         if (cached.isEmpty) {
-          emit(LocationsFailure(error: 'Failed to load locations. You are offline.'));
+          emit(
+            LocationsFailure(
+              error: 'Failed to load locations. You are offline.',
+            ),
+          );
         }
       }
     });
 
     on<UpdateLocation>((event, emit) async {
       emit(LocationUpdateLoading());
-      debugPrint('LocationsBloc: UpdateLocation started');
+      debugPrint('LocationsBloc: UpdateLocation start');
       try {
-        final url = '$locationsEndpoint/${event.locationId}';
+        final url = '$locationsURL/${event.locId}';
         final requestBody = {
           'location_name': event.name,
           'latitude': event.latitude,
@@ -85,18 +89,15 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
           'radius_m': event.radiusM.toInt(),
           'is_active': event.isActive,
         };
-        final response = await ApiClient.put(
-          url,
-          body: jsonEncode(requestBody),
-        );
+        final rspns = await ApiClient.put(url, body: jsonEncode(requestBody));
 
-        debugPrint('PUT response status code: ${response.statusCode}');
-        debugPrint('PUT response body: ${response.body}');
+        debugPrint('PUT rspns status code: ${rspns.statusCode}');
+        debugPrint('PUT rspns body: ${rspns.body}');
 
-        if (response.statusCode == 200 || response.statusCode == 201) {
+        if (rspns.statusCode == 200 || rspns.statusCode == 201) {
           emit(LocationUpdateSuccess());
         } else {
-          final errorData = jsonDecode(response.body);
+          final errorData = jsonDecode(rspns.body);
           String errorMessage = 'Failed to update location';
           if (errorData is Map) {
             if (errorData['error'] is Map &&
@@ -125,18 +126,18 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
           'radius_m': event.radiusM.toInt(),
           'is_active': event.isActive,
         };
-        final response = await ApiClient.post(
-          locationsEndpoint,
+        final rspns = await ApiClient.post(
+          locationsURL,
           body: jsonEncode(requestBody),
         );
 
-        debugPrint('POST response status code: ${response.statusCode}');
-        debugPrint('POST response body: ${response.body}');
+        debugPrint('POST rspns status code: ${rspns.statusCode}');
+        debugPrint('POST rspns body: ${rspns.body}');
 
-        if (response.statusCode == 200 || response.statusCode == 201) {
+        if (rspns.statusCode == 200 || rspns.statusCode == 201) {
           emit(LocationAddSuccess());
         } else {
-          final errorData = jsonDecode(response.body);
+          final errorData = jsonDecode(rspns.body);
           String errorMessage = 'Failed to add location';
           if (errorData is Map) {
             if (errorData['error'] is Map &&
@@ -156,18 +157,18 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
 
     on<DeleteLocation>((event, emit) async {
       emit(LocationDeleteLoading());
-      debugPrint('LocationsBloc: DeleteLocation started');
+      debugPrint('LocationsBloc: Delete Location start');
       try {
-        final url = '$locationsEndpoint/${event.locationId}';
-        final response = await ApiClient.delete(url);
+        final url = '$locationsURL/${event.locId}';
+        final rspns = await ApiClient.delete(url);
 
-        debugPrint('DELETE response status code: ${response.statusCode}');
-        debugPrint('DELETE response body: ${response.body}');
+        debugPrint('dlt rspns status code: ${rspns.statusCode}');
+        debugPrint('dlt rspns body: ${rspns.body}');
 
-        if (response.statusCode == 200 || response.statusCode == 201) {
+        if (rspns.statusCode == 200 || rspns.statusCode == 201) {
           emit(LocationDeleteSuccess());
         } else {
-          final errorData = jsonDecode(response.body);
+          final errorData = jsonDecode(rspns.body);
           String errorMessage = 'Failed to delete location';
           if (errorData is Map) {
             if (errorData['error'] is Map &&

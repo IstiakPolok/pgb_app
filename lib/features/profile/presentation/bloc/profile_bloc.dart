@@ -14,20 +14,22 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       debugPrint('ProfileBloc: LoadProfile started');
 
       // 1. Read cached profile first to display immediately
-      final cached = await SharedPrefsHelper.getCachedProfile();
+      final cached = await SharedPrefsHelper.getProf();
       if (cached != null) {
         debugPrint('ProfileBloc: Emitting cached profile: $cached');
-        emit(ProfileLoaded(
-          name: cached['name'] ?? '',
-          email: cached['email'] ?? '',
-          role: cached['role'] ?? '',
-        ));
+        emit(
+          ProfileLoaded(
+            name: cached['name'] ?? '',
+            email: cached['email'] ?? '',
+            role: cached['role'] ?? '',
+          ),
+        );
       }
 
       // 2. Query endpoint to fetch fresh data
       try {
-        debugPrint('ProfileBloc: Requesting $getMeEndpoint');
-        final response = await ApiClient.get(getMeEndpoint);
+        debugPrint('ProfileBloc: Requesting $getMeURL');
+        final response = await ApiClient.get(getMeURL);
 
         debugPrint('ProfileBloc Status Code: ${response.statusCode}');
         debugPrint('ProfileBloc Response Body: ${response.body}');
@@ -39,14 +41,19 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
           final String role = data['role'] ?? 'user';
 
           // Save new profile data to cache
-          await SharedPrefsHelper.saveCachedProfile(name: name, email: email, role: role);
+          await SharedPrefsHelper.saveProf(
+            name: name,
+            email: email,
+            role: role,
+          );
           emit(ProfileLoaded(name: name, email: email, role: role));
         } else {
           if (cached == null) {
             final errorData = jsonDecode(response.body);
             String errorMessage = 'Failed to load profile';
             if (errorData is Map) {
-              if (errorData['error'] is Map && errorData['error']['message'] != null) {
+              if (errorData['error'] is Map &&
+                  errorData['error']['message'] != null) {
                 errorMessage = errorData['error']['message'];
               } else if (errorData['message'] != null) {
                 errorMessage = errorData['message'];
@@ -57,7 +64,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         }
       } catch (e) {
         if (cached == null) {
-          emit(ProfileFailure(error: 'Failed to load profile. You are offline.'));
+          emit(
+            ProfileFailure(error: 'Failed to load profile. You are offline.'),
+          );
         }
       }
     });

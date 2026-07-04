@@ -14,7 +14,7 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
       debugPrint('TasksBloc: LoadTasks started');
 
       // 1. Read cached tasks first to display immediately
-      final cached = await SharedPrefsHelper.getCachedTasks();
+      final cached = await SharedPrefsHelper.getsaveTasks();
       if (cached.isNotEmpty) {
         debugPrint('TasksBloc: Emitting ${cached.length} cached tasks');
         emit(TasksLoaded(tasks: cached));
@@ -22,7 +22,7 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
 
       // 2. Query endpoint to fetch fresh data
       try {
-        final response = await ApiClient.get(todosEndpoint);
+        final response = await ApiClient.get(todosURL);
 
         debugPrint('TasksBloc Status Code: ${response.statusCode}');
         debugPrint('TasksBloc Response Body: ${response.body}');
@@ -37,7 +37,9 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
             if (dueAtStr != null) {
               try {
                 final dt = DateTime.parse(dueAtStr).toLocal();
-                final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+                final hour = dt.hour > 12
+                    ? dt.hour - 12
+                    : (dt.hour == 0 ? 12 : dt.hour);
                 final ampm = dt.hour >= 12 ? 'PM' : 'AM';
                 final minute = dt.minute.toString().padLeft(2, '0');
                 timeDue = 'Due $hour:$minute $ampm';
@@ -62,7 +64,8 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
             final errorData = jsonDecode(response.body);
             String errorMessage = 'Failed to load tasks';
             if (errorData is Map) {
-              if (errorData['error'] is Map && errorData['error']['message'] != null) {
+              if (errorData['error'] is Map &&
+                  errorData['error']['message'] != null) {
                 errorMessage = errorData['error']['message'];
               } else if (errorData['message'] != null) {
                 errorMessage = errorData['message'];
@@ -81,9 +84,9 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
 
     on<ToggleTaskCompletion>((event, emit) async {
       debugPrint('TasksBloc: ToggleTaskCompletion started');
-      
+
       // 1. Immediately update local cache to prevent UI status flickering
-      final cached = await SharedPrefsHelper.getCachedTasks();
+      final cached = await SharedPrefsHelper.getsaveTasks();
       String taskTitle = 'Task';
       for (var t in cached) {
         if (t['id'] == event.todoId) {
@@ -100,8 +103,9 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
       bool syncSuccess = false;
 
       try {
-        final url = '$todosEndpoint/${event.todoId}';
-        final timestamp = '${DateTime.now().add(const Duration(days: 100)).toUtc().toIso8601String().split('.').first}Z';
+        final url = '$todosURL/${event.todoId}';
+        final timestamp =
+            '${DateTime.now().add(const Duration(days: 100)).toUtc().toIso8601String().split('.').first}Z';
         final requestBody = {
           'is_completed': event.isCompleted,
           'updated_at': timestamp,
@@ -123,9 +127,11 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
       }
 
       if (!syncSuccess) {
-        debugPrint('TasksBloc: Network call failed or offline. Saving task completion offline.');
+        debugPrint(
+          'TasksBloc: Network call failed or offline. Saving task completion offline.',
+        );
         // Add this task change to pending sync actions queue
-        final pending = await SharedPrefsHelper.getPendingSyncActions();
+        final pending = await SharedPrefsHelper.getPendingSync();
         pending.removeWhere((element) => element['todoId'] == event.todoId);
         pending.add({
           'todoId': event.todoId,
@@ -133,7 +139,7 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
           'is_completed': event.isCompleted,
           'timestamp': DateTime.now().toIso8601String(),
         });
-        await SharedPrefsHelper.savePendingSyncActions(pending);
+        await SharedPrefsHelper.savePendingSync(pending);
       } else {
         // Refresh the tasks list from source to sync any database changes
         add(LoadTasks());

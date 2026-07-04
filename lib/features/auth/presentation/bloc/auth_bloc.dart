@@ -11,24 +11,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc() : super(AuthInitial()) {
     on<RegisterSubmitted>((event, emit) async {
       emit(AuthLoading());
-      debugPrint('AuthBloc: RegisterSubmitted started');
-      debugPrint('Request URL: $registerEndpoint');
+      debugPrint('AuthBloc: RegSub start');
+      debugPrint('Request URL: $registerURL');
       final requestBody = {
         'email': event.email,
         'password': event.password,
         'full_name': event.fullName,
       };
-      debugPrint('Request Body: ${jsonEncode(requestBody)}');
-      
+      debugPrint('RBody: ${jsonEncode(requestBody)}');
+
       try {
         final response = await http.post(
-          Uri.parse(registerEndpoint),
+          Uri.parse(registerURL),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(requestBody),
         );
 
-        debugPrint('Response Status Code: ${response.statusCode}');
-        debugPrint('Response Body: ${response.body}');
+        debugPrint('Status Code: ${response.statusCode}');
+        debugPrint('R Body: ${response.body}');
 
         if (response.statusCode == 200 || response.statusCode == 201) {
           final data = jsonDecode(response.body);
@@ -37,9 +37,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           final refreshToken = data['refresh_token'];
           final user = data['user'];
 
-          debugPrint('AuthBloc: Registration successful, saving auth data');
-          // Save token using your SharedPreferences helper
-          await SharedPrefsHelper.saveAuthData(
+          debugPrint('Reg successful, sav auth data');
+
+          await SharedPrefsHelper.saveAuth(
             accessToken: accessToken,
             refreshToken: refreshToken,
             userId: user['id'],
@@ -50,43 +50,39 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           emit(AuthSuccess(accessToken: accessToken));
         } else {
           final errorData = jsonDecode(response.body);
-          String errorMessage = 'Registration failed';
+          String errorMessage = 'Reg fail';
           if (errorData is Map) {
-            if (errorData['error'] is Map && errorData['error']['message'] != null) {
+            if (errorData['error'] is Map &&
+                errorData['error']['message'] != null) {
               errorMessage = errorData['error']['message'];
             } else if (errorData['message'] != null) {
               errorMessage = errorData['message'];
             }
           }
-          debugPrint('AuthBloc: Registration failed with message: $errorMessage');
-          emit(
-            AuthFailure(error: errorMessage),
-          );
+          debugPrint('AuthBloc: Reg faild with msg: $errorMessage');
+          emit(AuthFailure(error: errorMessage));
         }
       } catch (e) {
-        debugPrint('AuthBloc: Exception during registration: $e');
+        debugPrint('AuthBloc: X during Reg: $e');
         emit(AuthFailure(error: e.toString()));
       }
     });
 
     on<LoginSubmitted>((event, emit) async {
       emit(AuthLoading());
-      debugPrint('AuthBloc: LoginSubmitted started');
-      debugPrint('Request URL: $loginEndpoint');
-      final requestBody = {
-        'email': event.email,
-        'password': event.password,
-      };
-      debugPrint('Request Body: ${jsonEncode(requestBody)}');
-      
+      debugPrint('AuthBloc: Login Sub start');
+      debugPrint('Req URL: $loginURL');
+      final requestBody = {'email': event.email, 'password': event.password};
+      debugPrint('Req Body: ${jsonEncode(requestBody)}');
+
       try {
         final response = await http.post(
-          Uri.parse(loginEndpoint),
+          Uri.parse(loginURL),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(requestBody),
         );
 
-        debugPrint('Response Status Code: ${response.statusCode}');
+        debugPrint('Status Code: ${response.statusCode}');
         debugPrint('Response Body: ${response.body}');
 
         if (response.statusCode == 200 || response.statusCode == 201) {
@@ -96,8 +92,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           final refreshToken = data['refresh_token'];
           final user = data['user'];
 
-          debugPrint('AuthBloc: Login successful, saving auth data');
-          await SharedPrefsHelper.saveAuthData(
+          debugPrint('AuthBloc: Login success, sav auth data');
+          await SharedPrefsHelper.saveAuth(
             accessToken: accessToken,
             refreshToken: refreshToken,
             userId: user['id'],
@@ -110,16 +106,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           final errorData = jsonDecode(response.body);
           String errorMessage = 'Login failed';
           if (errorData is Map) {
-            if (errorData['error'] is Map && errorData['error']['message'] != null) {
+            if (errorData['error'] is Map &&
+                errorData['error']['message'] != null) {
               errorMessage = errorData['error']['message'];
             } else if (errorData['message'] != null) {
               errorMessage = errorData['message'];
             }
           }
           debugPrint('AuthBloc: Login failed with message: $errorMessage');
-          emit(
-            AuthFailure(error: errorMessage),
-          );
+          emit(AuthFailure(error: errorMessage));
         }
       } catch (e) {
         debugPrint('AuthBloc: Exception during login: $e');

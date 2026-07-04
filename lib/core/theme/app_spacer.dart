@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// Vertical Spacers
+/// vartical Spacers
 final v4pad = SizedBox(height: 4.h);
 final v5pad = SizedBox(height: 5.h);
 final v8pad = SizedBox(height: 8.h);
@@ -15,6 +15,6 @@ final v32pad = SizedBox(height: 32.h);
 final v36pad = SizedBox(height: 36.h);
 final v40pad = SizedBox(height: 40.h);
 
-/// Horizontal Spacers
+/// Horizintal Spacers
 final h8pad = SizedBox(width: 8.w);
 final h12pad = SizedBox(width: 12.w);

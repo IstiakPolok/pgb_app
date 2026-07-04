@@ -22,27 +22,27 @@ class _NewLocationPageState extends State<NewLocationPage> {
   double _radius = 150.0;
   bool _isActive = true;
 
-  GoogleMapController? _mapController;
-  late final TextEditingController _latController;
-  late final TextEditingController _lngController;
-  late final TextEditingController _nameController;
+  GoogleMapController? _mapCtrl;
+  late final TextEditingController _latCtrl;
+  late final TextEditingController _lngCtrl;
+  late final TextEditingController _nameCtrl;
   LatLng _center = const LatLng(23.82049184570468, 90.35792993058868);
   bool _isUpdatingFromMap = false;
   bool _isOffline = false;
-  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
+  late StreamSubscription<List<ConnectivityResult>> _connectSubs;
 
   @override
   void initState() {
     super.initState();
-    _latController = TextEditingController(
-      text: _center.latitude.toStringAsFixed(6),
-    );
-    _lngController = TextEditingController(
+    _latCtrl = TextEditingController(text: _center.latitude.toStringAsFixed(6));
+    _lngCtrl = TextEditingController(
       text: _center.longitude.toStringAsFixed(6),
     );
-    _nameController = TextEditingController();
+    _nameCtrl = TextEditingController();
     _checkConnectivity();
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+    _connectSubs = Connectivity().onConnectivityChanged.listen((
+      List<ConnectivityResult> results,
+    ) {
       setState(() {
         _isOffline = results.contains(ConnectivityResult.none);
       });
@@ -58,16 +58,16 @@ class _NewLocationPageState extends State<NewLocationPage> {
 
   @override
   void dispose() {
-    _mapController?.dispose();
-    _latController.dispose();
-    _lngController.dispose();
-    _nameController.dispose();
-    _connectivitySubscription.cancel();
+    _mapCtrl?.dispose();
+    _latCtrl.dispose();
+    _lngCtrl.dispose();
+    _nameCtrl.dispose();
+    _connectSubs.cancel();
     super.dispose();
   }
 
   void _Gmap(GoogleMapController controller) {
-    _mapController = controller;
+    _mapCtrl = controller;
   }
 
   @override
@@ -85,9 +85,9 @@ class _NewLocationPageState extends State<NewLocationPage> {
           context.read<LocationsBloc>().add(LoadLocations());
           Navigator.pop(context);
         } else if (state is LocationAddFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.error)));
         }
       },
       builder: (context, state) {
@@ -156,7 +156,9 @@ class _NewLocationPageState extends State<NewLocationPage> {
                                   center: _center,
                                   radius: _radius,
                                   fillColor: colorScheme.primary.withAlpha(30),
-                                  strokeColor: colorScheme.primary.withAlpha(120),
+                                  strokeColor: colorScheme.primary.withAlpha(
+                                    120,
+                                  ),
                                   strokeWidth: 2,
                                 ),
                               },
@@ -170,9 +172,9 @@ class _NewLocationPageState extends State<NewLocationPage> {
                                 setState(() {
                                   _center = position.target;
                                   _isUpdatingFromMap = true;
-                                  _latController.text = position.target.latitude
+                                  _latCtrl.text = position.target.latitude
                                       .toStringAsFixed(6);
-                                  _lngController.text = position.target.longitude
+                                  _lngCtrl.text = position.target.longitude
                                       .toStringAsFixed(6);
                                   _isUpdatingFromMap = false;
                                 });
@@ -241,17 +243,21 @@ class _NewLocationPageState extends State<NewLocationPage> {
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade700,
                       ),
                     ),
                     SizedBox(height: 8.h),
                     TextFormField(
-                      controller: _nameController,
+                      controller: _nameCtrl,
                       style: TextStyle(
                         color: colorScheme.onSurface,
                         fontSize: 15.sp,
                       ),
-                      decoration: const InputDecoration(hintText: 'Downtown Branch'),
+                      decoration: const InputDecoration(
+                        hintText: 'Downtown Branch',
+                      ),
                     ),
                     SizedBox(height: 20.h),
 
@@ -273,10 +279,11 @@ class _NewLocationPageState extends State<NewLocationPage> {
                               ),
                               SizedBox(height: 8.h),
                               TextFormField(
-                                controller: _latController,
-                                keyboardType: const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
+                                controller: _latCtrl,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
                                 style: TextStyle(
                                   color: colorScheme.onSurface,
                                   fontSize: 15.sp,
@@ -290,7 +297,7 @@ class _NewLocationPageState extends State<NewLocationPage> {
                                   if (lat != null) {
                                     setState(() {
                                       _center = LatLng(lat, _center.longitude);
-                                      _mapController?.animateCamera(
+                                      _mapCtrl?.animateCamera(
                                         CameraUpdate.newLatLng(_center),
                                       );
                                     });
@@ -318,10 +325,11 @@ class _NewLocationPageState extends State<NewLocationPage> {
                               ),
                               SizedBox(height: 8.h),
                               TextFormField(
-                                controller: _lngController,
-                                keyboardType: const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
+                                controller: _lngCtrl,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
                                 style: TextStyle(
                                   color: colorScheme.onSurface,
                                   fontSize: 15.sp,
@@ -335,7 +343,7 @@ class _NewLocationPageState extends State<NewLocationPage> {
                                   if (lng != null) {
                                     setState(() {
                                       _center = LatLng(_center.latitude, lng);
-                                      _mapController?.animateCamera(
+                                      _mapCtrl?.animateCamera(
                                         CameraUpdate.newLatLng(_center),
                                       );
                                     });
@@ -441,30 +449,38 @@ class _NewLocationPageState extends State<NewLocationPage> {
                       onPressed: (state is LocationAddLoading || _isOffline)
                           ? null
                           : () {
-                              if (_nameController.text.trim().isEmpty) {
+                              if (_nameCtrl.text.trim().isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Please enter a location name')),
+                                  const SnackBar(
+                                    content: Text(
+                                      'Please enter a location name',
+                                    ),
+                                  ),
                                 );
                                 return;
                               }
-                              final lat = double.tryParse(_latController.text);
-                              final lng = double.tryParse(_lngController.text);
+                              final lat = double.tryParse(_latCtrl.text);
+                              final lng = double.tryParse(_lngCtrl.text);
                               if (lat == null || lng == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Please enter valid coordinates')),
+                                  const SnackBar(
+                                    content: Text(
+                                      'Please enter valid coordinates',
+                                    ),
+                                  ),
                                 );
                                 return;
                               }
 
                               context.read<LocationsBloc>().add(
-                                    AddLocation(
-                                      name: _nameController.text.trim(),
-                                      latitude: lat,
-                                      longitude: lng,
-                                      radiusM: _radius,
-                                      isActive: _isActive,
-                                    ),
-                                  );
+                                AddLocation(
+                                  name: _nameCtrl.text.trim(),
+                                  latitude: lat,
+                                  longitude: lng,
+                                  radiusM: _radius,
+                                  isActive: _isActive,
+                                ),
+                              );
                             },
                       child: state is LocationAddLoading
                           ? const SizedBox(

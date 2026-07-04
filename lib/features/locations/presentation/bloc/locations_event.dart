@@ -6,7 +6,7 @@ abstract class LocationsEvent {}
 class LoadLocations extends LocationsEvent {}
 
 class UpdateLocation extends LocationsEvent {
-  final String locationId;
+  final String locId;
   final String name;
   final double latitude;
   final double longitude;
@@ -14,7 +14,7 @@ class UpdateLocation extends LocationsEvent {
   final bool isActive;
 
   UpdateLocation({
-    required this.locationId,
+    required this.locId,
     required this.name,
     required this.latitude,
     required this.longitude,
@@ -40,7 +40,7 @@ class AddLocation extends LocationsEvent {
 }
 
 class DeleteLocation extends LocationsEvent {
-  final String locationId;
+  final String locId;
 
-  DeleteLocation({required this.locationId});
+  DeleteLocation({required this.locId});
 }

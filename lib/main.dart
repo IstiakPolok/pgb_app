@@ -10,12 +10,12 @@ import 'package:pgb_app/core/router/app_router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final token = await SharedPrefsHelper.getAccessToken();
-  runApp(pgb_app(hasToken: token != null));
+  runApp(PgbApp(hasToken: token != null));
 }
 
-class pgb_app extends StatelessWidget {
+class PgbApp extends StatelessWidget {
   final bool hasToken;
-  pgb_app({super.key, this.hasToken = false});
+  PgbApp({super.key, this.hasToken = false});
 
   late final GoRouter _router = AppRouter.createRouter(hasToken);
 

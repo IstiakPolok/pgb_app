@@ -17,15 +17,15 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final ValueNotifier<bool> _obscurePassword = ValueNotifier<bool>(true);
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  final ValueNotifier<bool> _obPass = ValueNotifier<bool>(true);
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _obscurePassword.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    _obPass.dispose();
     super.dispose();
   }
 
@@ -96,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     v8pad,
                     TextFormField(
-                      controller: _emailController,
+                      controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
                       style: TextStyle(
                         color: isDark ? Colors.white : Colors.black,
@@ -121,10 +121,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     v8pad,
                     ValueListenableBuilder<bool>(
-                      valueListenable: _obscurePassword,
+                      valueListenable: _obPass,
                       builder: (context, isObscured, child) {
                         return TextFormField(
-                          controller: _passwordController,
+                          controller: _passCtrl,
                           obscureText: isObscured,
                           style: TextStyle(
                             color: isDark ? Colors.white : Colors.black,
@@ -144,7 +144,7 @@ class _LoginPageState extends State<LoginPage> {
                                 size: 22.r,
                               ),
                               onPressed: () {
-                                _obscurePassword.value = !isObscured;
+                                _obPass.value = !isObscured;
                               },
                             ),
                           ),
@@ -167,13 +167,13 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     v32pad,
-                    // Sign In Button
+                    // sign in buttopn
                     ElevatedButton(
                       onPressed: state is AuthLoading
                           ? null
                           : () {
-                              final email = _emailController.text.trim();
-                              final password = _passwordController.text.trim();
+                              final email = _emailCtrl.text.trim();
+                              final password = _passCtrl.text.trim();
 
                               if (email.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(

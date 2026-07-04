@@ -12,19 +12,19 @@ import 'package:pgb_app/features/locations/presentation/bloc/locations_state.dar
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 class EditLocationPage extends StatefulWidget {
-  final String locationId;
+  final String locId;
   final String initialName;
-  final String initialCoords;
-  final double initialRadius;
-  final bool initialIsActive;
+  final String codi;
+  final double locRadius;
+  final bool locActive;
 
   const EditLocationPage({
     super.key,
-    required this.locationId,
+    required this.locId,
     required this.initialName,
-    required this.initialCoords,
-    required this.initialRadius,
-    required this.initialIsActive,
+    required this.codi,
+    required this.locRadius,
+    required this.locActive,
   });
 
   @override
@@ -32,43 +32,40 @@ class EditLocationPage extends StatefulWidget {
 }
 
 class _EditLocationPageState extends State<EditLocationPage> {
-  late final TextEditingController _nameController;
-  late final TextEditingController _latController;
-  late final TextEditingController _lngController;
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _latCtrl;
+  late final TextEditingController _lngCtrl;
   late double _radius;
   late bool _isActive;
 
-  GoogleMapController? _mapController;
+  GoogleMapController? _mapCtrl;
   late LatLng _center;
-  bool _isUpdatingFromMap = false;
+  bool _isUpMap = false;
   bool _isOffline = false;
-  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
+  late StreamSubscription<List<ConnectivityResult>> _connectSubs;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.initialName);
+    _nameCtrl = TextEditingController(text: widget.initialName);
 
-    // Split coords (e.g. "25.2048, 55.2708")
-    final parts = widget.initialCoords.split(',');
+    final parts = widget.codi.split(',');
     final double lat = double.tryParse(parts.first.trim()) ?? 23.820492;
     final double lng =
         (parts.length > 1 ? double.tryParse(parts[1].trim()) : null) ??
         90.357930;
     _center = LatLng(lat, lng);
 
-    _latController = TextEditingController(
-      text: _center.latitude.toStringAsFixed(6),
-    );
-    _lngController = TextEditingController(
+    _latCtrl = TextEditingController(text: _center.latitude.toStringAsFixed(6));
+    _lngCtrl = TextEditingController(
       text: _center.longitude.toStringAsFixed(6),
     );
 
-    _radius = widget.initialRadius.clamp(50.0, 500.0);
-    _isActive = widget.initialIsActive;
+    _radius = widget.locRadius.clamp(50.0, 500.0);
+    _isActive = widget.locActive;
 
     _checkConnectivity();
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+    _connectSubs = Connectivity().onConnectivityChanged.listen((
       List<ConnectivityResult> results,
     ) {
       setState(() {
@@ -86,16 +83,16 @@ class _EditLocationPageState extends State<EditLocationPage> {
 
   @override
   void dispose() {
-    _mapController?.dispose();
-    _nameController.dispose();
-    _latController.dispose();
-    _lngController.dispose();
-    _connectivitySubscription.cancel();
+    _mapCtrl?.dispose();
+    _nameCtrl.dispose();
+    _latCtrl.dispose();
+    _lngCtrl.dispose();
+    _connectSubs.cancel();
     super.dispose();
   }
 
   void _onMapCreated(GoogleMapController controller) {
-    _mapController = controller;
+    _mapCtrl = controller;
   }
 
   @override
@@ -209,14 +206,12 @@ class _EditLocationPageState extends State<EditLocationPage> {
                               onCameraMove: (position) {
                                 setState(() {
                                   _center = position.target;
-                                  _isUpdatingFromMap = true;
-                                  _latController.text = position.target.latitude
+                                  _isUpMap = true;
+                                  _latCtrl.text = position.target.latitude
                                       .toStringAsFixed(6);
-                                  _lngController.text = position
-                                      .target
-                                      .longitude
+                                  _lngCtrl.text = position.target.longitude
                                       .toStringAsFixed(6);
-                                  _isUpdatingFromMap = false;
+                                  _isUpMap = false;
                                 });
                               },
                             ),
@@ -290,7 +285,7 @@ class _EditLocationPageState extends State<EditLocationPage> {
                     ),
                     SizedBox(height: 8.h),
                     TextFormField(
-                      controller: _nameController,
+                      controller: _nameCtrl,
                       style: TextStyle(
                         color: colorScheme.onSurface,
                         fontSize: 15.sp,
@@ -317,7 +312,7 @@ class _EditLocationPageState extends State<EditLocationPage> {
                               ),
                               SizedBox(height: 8.h),
                               TextFormField(
-                                controller: _latController,
+                                controller: _latCtrl,
                                 keyboardType:
                                     const TextInputType.numberWithOptions(
                                       decimal: true,
@@ -330,12 +325,12 @@ class _EditLocationPageState extends State<EditLocationPage> {
                                   hintText: '25.2048',
                                 ),
                                 onChanged: (val) {
-                                  if (_isUpdatingFromMap) return;
+                                  if (_isUpMap) return;
                                   final lat = double.tryParse(val);
                                   if (lat != null) {
                                     setState(() {
                                       _center = LatLng(lat, _center.longitude);
-                                      _mapController?.animateCamera(
+                                      _mapCtrl?.animateCamera(
                                         CameraUpdate.newLatLng(_center),
                                       );
                                     });
@@ -363,7 +358,7 @@ class _EditLocationPageState extends State<EditLocationPage> {
                               ),
                               SizedBox(height: 8.h),
                               TextFormField(
-                                controller: _lngController,
+                                controller: _lngCtrl,
                                 keyboardType:
                                     const TextInputType.numberWithOptions(
                                       decimal: true,
@@ -376,12 +371,12 @@ class _EditLocationPageState extends State<EditLocationPage> {
                                   hintText: '55.2708',
                                 ),
                                 onChanged: (val) {
-                                  if (_isUpdatingFromMap) return;
+                                  if (_isUpMap) return;
                                   final lng = double.tryParse(val);
                                   if (lng != null) {
                                     setState(() {
                                       _center = LatLng(_center.latitude, lng);
-                                      _mapController?.animateCamera(
+                                      _mapCtrl?.animateCamera(
                                         CameraUpdate.newLatLng(_center),
                                       );
                                     });
@@ -488,8 +483,8 @@ class _EditLocationPageState extends State<EditLocationPage> {
                           : () {
                               context.read<LocationsBloc>().add(
                                 UpdateLocation(
-                                  locationId: widget.locationId,
-                                  name: _nameController.text,
+                                  locId: widget.locId,
+                                  name: _nameCtrl.text,
                                   latitude: _center.latitude,
                                   longitude: _center.longitude,
                                   radiusM: _radius,
@@ -524,7 +519,7 @@ class _EditLocationPageState extends State<EditLocationPage> {
                           ? null
                           : () {
                               context.read<LocationsBloc>().add(
-                                DeleteLocation(locationId: widget.locationId),
+                                DeleteLocation(locId: widget.locId),
                               );
                             },
                       style: OutlinedButton.styleFrom(

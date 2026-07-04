@@ -13,10 +13,7 @@ class AppRouter {
           path: '/register',
           builder: (context, state) => const RegisterPage(),
         ),
-        GoRoute(
-          path: '/nav',
-          builder: (context, state) => const MainNavigationPage(),
-        ),
+        GoRoute(path: '/nav', builder: (context, state) => const navBar()),
       ],
     );
   }
