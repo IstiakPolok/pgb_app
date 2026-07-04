@@ -7,6 +7,8 @@ import 'package:pgb_app/features/locations/presentation/pages/locations_page.dar
 import 'package:pgb_app/features/sync/presentation/pages/sync_page.dart';
 import 'package:pgb_app/features/profile/presentation/pages/profile_page.dart';
 
+import 'package:pgb_app/core/services/geofence_manager.dart';
+
 class navBar extends StatefulWidget {
   final int initialIndex;
   const navBar({super.key, this.initialIndex = 0});
@@ -22,6 +24,8 @@ class _navBarState extends State<navBar> {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: widget.initialIndex);
+    // Start geofence monitoring
+    GeofenceManager().startMonitoring();
   }
 
   @override

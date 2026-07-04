@@ -13,7 +13,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       emit(ProfileLoading());
       debugPrint('ProfileBloc: LoadProfile started');
 
-      // 1. Read cached profile first to display immediately
+      // show from shrprf
       final cached = await SharedPrefsHelper.getProf();
       if (cached != null) {
         debugPrint('ProfileBloc: Emitting cached profile: $cached');
@@ -26,7 +26,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         );
       }
 
-      // 2. Query endpoint to fetch fresh data
+      // show from api
       try {
         debugPrint('ProfileBloc: Requesting $getMeURL');
         final response = await ApiClient.get(getMeURL);
@@ -40,7 +40,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
           final String email = data['email'] ?? '';
           final String role = data['role'] ?? 'user';
 
-          // Save new profile data to cache
+          // Save new profile data to shrprf
           await SharedPrefsHelper.saveProf(
             name: name,
             email: email,

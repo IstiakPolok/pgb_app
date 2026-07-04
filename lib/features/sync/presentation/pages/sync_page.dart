@@ -7,6 +7,7 @@ import 'package:pgb_app/core/theme/app_spacer.dart';
 import 'package:pgb_app/core/utils/shared_prefs_helper.dart';
 import 'package:pgb_app/core/constants/api_endpoints.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:pgb_app/core/services/sync_manager.dart';
 
 class SyncPage extends StatefulWidget {
   const SyncPage({super.key});
@@ -24,6 +25,7 @@ class _SyncPageState extends State<SyncPage>
   List<Map<String, dynamic>> _pendingSyncActions = [];
   bool _isOffline = false;
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
+  late StreamSubscription<bool> _syncManagerSubscription;
 
   @override
   void initState() {
@@ -35,7 +37,6 @@ class _SyncPageState extends State<SyncPage>
     _loadPendingActions();
     _checkConnectivity();
 
-    // Subscribe to real-time connectivity shifts
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
       List<ConnectivityResult> results,
     ) {
@@ -43,6 +44,26 @@ class _SyncPageState extends State<SyncPage>
         _isOffline = results.contains(ConnectivityResult.none);
       });
     });
+
+    _syncManagerSubscription = SyncManager().onSyncStatusChanged.listen((isSyncing) {
+      if (mounted) {
+        setState(() {
+          _isSyncing = isSyncing;
+        });
+        if (isSyncing) {
+          _animationController.repeat();
+        } else {
+          _animationController.stop();
+          _loadPendingActions();
+        }
+      }
+    });
+    
+    // Set initial syncing state if SyncManager is already running
+    _isSyncing = SyncManager().isSyncing;
+    if (_isSyncing) {
+      _animationController.repeat();
+    }
   }
 
   Future<void> _checkConnectivity() async {
@@ -64,95 +85,46 @@ class _SyncPageState extends State<SyncPage>
   void dispose() {
     _animationController.dispose();
     _connectivitySubscription.cancel();
+    _syncManagerSubscription.cancel();
     super.dispose();
   }
 
   Future<void> _startSync() async {
+    if (_isOffline) {
+      _stopSyncWithMsg('You are offline. Cannot sync.');
+      return;
+    }
+
     setState(() {
       _isSyncing = true;
     });
     _animationController.repeat();
 
-    final actions = List<Map<String, dynamic>>.from(_pendingSyncActions);
-    if (actions.isEmpty) {
-      _stopSyncWithMsg('No pending tasks to sync.');
-      return;
-    }
-
-    final token = await SharedPrefsHelper.getAccessToken();
-    if (token == null) {
-      _stopSyncWithMsg('Not logged in. Please log in first.');
-      return;
-    }
-
-    List<Map<String, dynamic>> failedActions = [];
-
-    try {
-      final changesList = actions.map((action) {
-        final parsedDate = DateTime.parse(
-          action['timestamp'] ?? DateTime.now().toString(),
-        );
-        final timestamp =
-            '${parsedDate.add(const Duration(days: 100)).toUtc().toIso8601String().split('.').first}Z';
-        return {
-          'todo_id': action['todoId'],
-          'is_completed': action['is_completed'] ?? false,
-          'updated_at': timestamp,
-        };
-      }).toList();
-
-      debugPrint('SyncPage posting payload changes to: $syncTodosURL');
-      debugPrint('SyncPage payload: ${jsonEncode({'changes': changesList})}');
-
-      final response = await http.post(
-        Uri.parse(syncTodosURL),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({'changes': changesList}),
-      );
-
-      debugPrint('SyncPage Response Code: ${response.statusCode}');
-      debugPrint('SyncPage Response Body: ${response.body}');
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final decoded = jsonDecode(response.body);
-        final List<dynamic> syncedIds = decoded['synced_ids'] ?? [];
-        failedActions = actions
-            .where((action) => !syncedIds.contains(action['todoId']))
-            .toList();
-      } else {
-        failedActions = actions;
-      }
-    } catch (e) {
-      debugPrint('Exception in SyncPage sync call: $e');
-      failedActions = actions;
-    }
-
-    await SharedPrefsHelper.savePendingSync(failedActions);
-    _pendingSyncActions = failedActions;
+    final success = await SyncManager().performSync();
 
     if (mounted) {
       _animationController.stop();
       setState(() {
         _isSyncing = false;
-        _pendingCount = failedActions.length;
+      });
+      
+      final actions = await SharedPrefsHelper.getPendingSync();
+      setState(() {
+        _pendingSyncActions = actions;
+        _pendingCount = actions.length;
         final now = DateTime.now();
         final minutes = now.minute.toString().padLeft(2, '0');
         final ampm = now.hour >= 12 ? 'PM' : 'AM';
-        final hour = now.hour > 12
-            ? now.hour - 12
-            : (now.hour == 0 ? 12 : now.hour);
-        _lastSynced = failedActions.isEmpty
+        final hour = now.hour > 12 ? now.hour - 12 : (now.hour == 0 ? 12 : now.hour);
+        _lastSynced = actions.isEmpty
             ? 'Last synced today, $hour:$minutes $ampm'
-            : 'Sync partially completed. $hour:$minutes $ampm';
+            : 'Sync completed with some failures. $hour:$minutes $ampm';
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            failedActions.isEmpty
+            success
                 ? 'All tasks synced successfully!'
                 : 'Some tasks failed to sync. Check network connection.',
           ),
@@ -177,19 +149,16 @@ class _SyncPageState extends State<SyncPage>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Theme values for offline banner
     final bannerBg = isDark ? const Color(0xFF2E220F) : const Color(0xFFFEF3C7);
     final bannerText = isDark
         ? const Color(0xFFFBBF24)
         : const Color(0xFFB45309);
 
-    // Badge styling
     final badgeBg = isDark ? const Color(0xFF2D2115) : const Color(0xFFFFFBEB);
     final badgeText = isDark
         ? const Color(0xFFFBBF24)
         : const Color(0xFFD97706);
 
-    // Sync icon background circle
     final syncIconCircleBg = isDark
         ? const Color(0xFF132D2A)
         : const Color(0xFFE6F4F1);
@@ -199,7 +168,6 @@ class _SyncPageState extends State<SyncPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Scrollable Content
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
@@ -210,7 +178,6 @@ class _SyncPageState extends State<SyncPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Header Title
                       Text(
                         'Sync',
                         style: TextStyle(
@@ -221,7 +188,6 @@ class _SyncPageState extends State<SyncPage>
                       ),
                       v20pad,
 
-                      // Offline Warning Banner
                       if (_isOffline) ...[
                         Container(
                           padding: EdgeInsets.all(16.r),
@@ -269,7 +235,6 @@ class _SyncPageState extends State<SyncPage>
                         v20pad,
                       ],
 
-                      // Sync Progress / Status Card
                       Container(
                         padding: EdgeInsets.all(16.r),
                         decoration: BoxDecoration(
@@ -282,7 +247,6 @@ class _SyncPageState extends State<SyncPage>
                         ),
                         child: Row(
                           children: [
-                            // Sync rotating icon container
                             RotationTransition(
                               turns: _animationController,
                               child: Container(
@@ -332,7 +296,6 @@ class _SyncPageState extends State<SyncPage>
                       ),
                       v24pad,
 
-                      // Pending Items Title and List
                       if (_pendingCount > 0) ...[
                         Text(
                           'WAITING TO UPLOAD',
@@ -369,7 +332,6 @@ class _SyncPageState extends State<SyncPage>
                               ),
                               child: Row(
                                 children: [
-                                  // Task icon wrapper
                                   Container(
                                     width: 40.r,
                                     height: 40.r,
@@ -410,7 +372,7 @@ class _SyncPageState extends State<SyncPage>
                                       ],
                                     ),
                                   ),
-                                  // Pending Badge
+
                                   Container(
                                     padding: EdgeInsets.symmetric(
                                       horizontal: 8.w,
@@ -441,7 +403,6 @@ class _SyncPageState extends State<SyncPage>
               ),
             ),
 
-            // Sync Button at Bottom
             Padding(
               padding: EdgeInsets.only(left: 24.w, right: 24.w, bottom: 24.h),
               child: ElevatedButton(

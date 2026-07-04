@@ -328,7 +328,7 @@ class _LocationsPageState extends State<LocationsPage> {
                                                         ),
                                                       ),
                                                       SizedBox(width: 8.w),
-                                                      // Active/Inactive Badge
+
                                                       Container(
                                                         padding:
                                                             EdgeInsets.symmetric(
@@ -368,7 +368,6 @@ class _LocationsPageState extends State<LocationsPage> {
                                               ),
                                             ),
 
-                                            // Suffix Arrow
                                             Icon(
                                               Icons.arrow_forward_ios_rounded,
                                               size: 14.r,

@@ -172,102 +172,117 @@ class ProfilePage extends StatelessWidget {
                           ),
                         ),
 
-                        Container(
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
-                          decoration: BoxDecoration(
-                            border: Border.symmetric(
-                              horizontal: BorderSide(color: dividerColor, width: 1.r),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 16.w,
-                                    vertical: 16.h,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primaryContainer,
-                                    borderRadius: BorderRadius.circular(12.r),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: darknaki ? 0.2 : 0.05,
-                                        ),
-                                        blurRadius: 10.r,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '1/5',
-                                        style: TextStyle(
-                                          fontSize: 20.sp,
-                                          fontWeight: FontWeight.w900,
-                                          color: textColor,
-                                        ),
-                                      ),
-                                      v4pad,
-                                      Text(
-                                        'Tasks done today',
-                                        style: TextStyle(
-                                          fontSize: 13.sp,
-                                          color: subtileTextColor,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                        FutureBuilder<List<dynamic>>(
+                          future: Future.wait([
+                            SharedPrefsHelper.getsaveTasks(),
+                            SharedPrefsHelper.getLocations(),
+                          ]),
+                          builder: (context, snapshot) {
+                            final tasks = (snapshot.data?[0] as List?)?.map((e) => Map<String, dynamic>.from(e)).toList() ?? [];
+                            final locations = (snapshot.data?[1] as List?)?.map((e) => Map<String, dynamic>.from(e)).toList() ?? [];
+
+                            final doneCount = tasks.where((t) => t['isCmplt'] == true).length;
+                            final totalCount = tasks.length;
+                            final activeCount = locations.where((l) => l['isActive'] == true).length;
+
+                            return Container(
+                              padding: EdgeInsets.symmetric(vertical: 16.h),
+                              decoration: BoxDecoration(
+                                border: Border.symmetric(
+                                  horizontal: BorderSide(color: dividerColor, width: 1.r),
                                 ),
                               ),
-                              h8pad,
-                              Expanded(
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 16.w,
-                                    vertical: 16.h,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primaryContainer,
-                                    borderRadius: BorderRadius.circular(12.r),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: darknaki ? 0.2 : 0.05,
-                                        ),
-                                        blurRadius: 10.r,
-                                        offset: const Offset(0, 4),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 16.w,
+                                        vertical: 16.h,
                                       ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '3',
-                                        style: TextStyle(
-                                          fontSize: 20.sp,
-                                          fontWeight: FontWeight.w900,
-                                          color: textColor,
-                                        ),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primaryContainer,
+                                        borderRadius: BorderRadius.circular(12.r),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: darknaki ? 0.2 : 0.05,
+                                            ),
+                                            blurRadius: 10.r,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
                                       ),
-                                      v4pad,
-                                      Text(
-                                        'Active locations',
-                                        style: TextStyle(
-                                          fontSize: 13.sp,
-                                          color: subtileTextColor,
-                                        ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '$doneCount/$totalCount',
+                                            style: TextStyle(
+                                              fontSize: 20.sp,
+                                              fontWeight: FontWeight.w900,
+                                              color: textColor,
+                                            ),
+                                          ),
+                                          v4pad,
+                                          Text(
+                                            'Tasks done today',
+                                            style: TextStyle(
+                                              fontSize: 13.sp,
+                                              color: subtileTextColor,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                ),
+                                  h8pad,
+                                  Expanded(
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 16.w,
+                                        vertical: 16.h,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primaryContainer,
+                                        borderRadius: BorderRadius.circular(12.r),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: darknaki ? 0.2 : 0.05,
+                                            ),
+                                            blurRadius: 10.r,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '$activeCount',
+                                            style: TextStyle(
+                                              fontSize: 20.sp,
+                                              fontWeight: FontWeight.w900,
+                                              color: textColor,
+                                            ),
+                                          ),
+                                          v4pad,
+                                          Text(
+                                            'Active locations',
+                                            style: TextStyle(
+                                              fontSize: 13.sp,
+                                              color: subtileTextColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
 
                         Container(

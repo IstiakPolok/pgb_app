@@ -1,26 +1,36 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pgb_app/core/network/api_client.dart';
 import 'package:pgb_app/core/constants/api_endpoints.dart';
 import 'package:pgb_app/core/utils/shared_prefs_helper.dart';
+import 'package:pgb_app/core/services/sync_manager.dart';
 import 'tasks_event.dart';
 import 'tasks_state.dart';
 
 class TasksBloc extends Bloc<TasksEvent, TasksState> {
+  StreamSubscription<bool>? _syncSubscription;
+
   TasksBloc() : super(TasksInitial()) {
+    _syncSubscription = SyncManager().onSyncStatusChanged.listen((isSyncing) {
+      if (!isSyncing) {
+        add(LoadTasks());
+      }
+    });
+
     on<LoadTasks>((event, emit) async {
       emit(TasksLoading());
       debugPrint('TasksBloc: LoadTasks started');
 
-      // 1. Read cached tasks first to display immediately
+      // show task from shareprf
       final cached = await SharedPrefsHelper.getsaveTasks();
       if (cached.isNotEmpty) {
         debugPrint('TasksBloc: Emitting ${cached.length} cached tasks');
         emit(TasksLoaded(tasks: cached));
       }
 
-      // 2. Query endpoint to fetch fresh data
+      // show from API
       try {
         final response = await ApiClient.get(todosURL);
 
@@ -56,7 +66,7 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
             };
           }).toList();
 
-          // Save new data to cache
+          // Save new data in sharprf
           await SharedPrefsHelper.saveCachedTasks(mappedTasks);
           emit(TasksLoaded(tasks: mappedTasks));
         } else {
@@ -85,7 +95,7 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
     on<ToggleTaskCompletion>((event, emit) async {
       debugPrint('TasksBloc: ToggleTaskCompletion started');
 
-      // 1. Immediately update local cache to prevent UI status flickering
+      //  update data in shrprf
       final cached = await SharedPrefsHelper.getsaveTasks();
       String taskTitle = 'Task';
       for (var t in cached) {
@@ -97,7 +107,7 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
       }
       await SharedPrefsHelper.saveCachedTasks(cached);
 
-      // 2. Emit the updated cached list immediately to keep UI in sync
+      // 2. show updated list
       emit(TasksLoaded(tasks: cached));
 
       bool syncSuccess = false;
@@ -130,7 +140,7 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
         debugPrint(
           'TasksBloc: Network call failed or offline. Saving task completion offline.',
         );
-        // Add this task change to pending sync actions queue
+        //  add to sync in shareprf
         final pending = await SharedPrefsHelper.getPendingSync();
         pending.removeWhere((element) => element['todoId'] == event.todoId);
         pending.add({
@@ -141,9 +151,14 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
         });
         await SharedPrefsHelper.savePendingSync(pending);
       } else {
-        // Refresh the tasks list from source to sync any database changes
         add(LoadTasks());
       }
     });
+  }
+
+  @override
+  Future<void> close() {
+    _syncSubscription?.cancel();
+    return super.close();
   }
 }

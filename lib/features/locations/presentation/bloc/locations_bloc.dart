@@ -13,14 +13,24 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
       emit(LocationsLoading());
       debugPrint('LocationsBloc: LoadLocations started');
 
-      // 1. Read cached locations first to display immediately
+      // 1. save location show
       final cached = await SharedPrefsHelper.getLocations();
-      if (cached.isNotEmpty) {
-        debugPrint('LocationsBloc: Emitting ${cached.length} cached locations');
-        emit(LocationsLoaded(locations: cached));
+      final deactivated = await SharedPrefsHelper.getDeactiLoc();
+      final combinedCached = [...cached];
+      for (final loc in deactivated) {
+        if (!combinedCached.any((element) => element['id'] == loc['id'])) {
+          combinedCached.add(loc);
+        }
       }
 
-      // 2. Query endpoint to fetch fresh data
+      if (combinedCached.isNotEmpty) {
+        debugPrint(
+          'LocationsBloc: Emitting ${combinedCached.length} cached locations',
+        );
+        emit(LocationsLoaded(locations: combinedCached));
+      }
+
+      // lco show from api
       try {
         final rspns = await ApiClient.get(locationsURL);
 
@@ -48,9 +58,18 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
             };
           }).toList();
 
-          // Save to local cache
+          // Save to shrprf
           await SharedPrefsHelper.saveLocations(mappedLocations);
-          emit(LocationsLoaded(locations: mappedLocations));
+
+          final freshDeactivated = await SharedPrefsHelper.getDeactiLoc();
+          final combinedList = [...mappedLocations];
+          for (final loc in freshDeactivated) {
+            if (!combinedList.any((element) => element['id'] == loc['id'])) {
+              combinedList.add(loc);
+            }
+          }
+
+          emit(LocationsLoaded(locations: combinedList));
         } else {
           if (cached.isEmpty) {
             final errorData = jsonDecode(rspns.body);
@@ -95,6 +114,20 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
         debugPrint('PUT rspns body: ${rspns.body}');
 
         if (rspns.statusCode == 200 || rspns.statusCode == 201) {
+          if (event.isActive) {
+            // Activated again, remove from local deactivated cache
+            await SharedPrefsHelper.rmvDeactiLoc(event.locId);
+          } else {
+            // Deactivated, add to local deactivated cache
+            final locMap = {
+              'id': event.locId,
+              'name': event.name,
+              'coords': '${event.latitude}, ${event.longitude}',
+              'radius': '${event.radiusM.round()} m radius',
+              'isActive': false,
+            };
+            await SharedPrefsHelper.addDeactiLoc(locMap);
+          }
           emit(LocationUpdateSuccess());
         } else {
           final errorData = jsonDecode(rspns.body);
@@ -135,6 +168,24 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
         debugPrint('POST rspns body: ${rspns.body}');
 
         if (rspns.statusCode == 200 || rspns.statusCode == 201) {
+          if (!event.isActive) {
+            try {
+              final decoded = jsonDecode(rspns.body);
+              final newId = decoded['data']?['id'] ?? '';
+              if (newId.isNotEmpty) {
+                final locMap = {
+                  'id': newId,
+                  'name': event.name,
+                  'coords': '${event.latitude}, ${event.longitude}',
+                  'radius': '${event.radiusM.round()} m radius',
+                  'isActive': false,
+                };
+                await SharedPrefsHelper.addDeactiLoc(locMap);
+              }
+            } catch (e) {
+              debugPrint('Failed to parse new location ID: $e');
+            }
+          }
           emit(LocationAddSuccess());
         } else {
           final errorData = jsonDecode(rspns.body);
@@ -166,6 +217,7 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
         debugPrint('dlt rspns body: ${rspns.body}');
 
         if (rspns.statusCode == 200 || rspns.statusCode == 201) {
+          await SharedPrefsHelper.rmvDeactiLoc(event.locId);
           emit(LocationDeleteSuccess());
         } else {
           final errorData = jsonDecode(rspns.body);

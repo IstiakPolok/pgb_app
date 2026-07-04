@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pgb_app/core/services/geofence_manager.dart';
 
 class SharedPrefsHelper {
   static const String _AccToken = 'access_token';
@@ -111,20 +112,20 @@ class SharedPrefsHelper {
     }
   }
 
-  static const String _keyCachedLocations = 'cached_locations';
+  static const String _keysaveLoc = 'cached_locations';
 
   // save  location
   static Future<void> saveLocations(
     List<Map<String, dynamic>> locations,
   ) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyCachedLocations, jsonEncode(locations));
+    await prefs.setString(_keysaveLoc, jsonEncode(locations));
   }
 
   // getlocation
   static Future<List<Map<String, dynamic>>> getLocations() async {
     final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getString(_keyCachedLocations);
+    final data = prefs.getString(_keysaveLoc);
     if (data == null) return [];
     try {
       final List<dynamic> decoded = jsonDecode(data);
@@ -134,8 +135,48 @@ class SharedPrefsHelper {
     }
   }
 
-  // clear  the save data from shareprf
+  static const String _keyDeactiLoc = 'deactivated_locations';
+
+  // save deactivated locations
+  static Future<void> saveDeactiLoc(
+    List<Map<String, dynamic>> locations,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyDeactiLoc, jsonEncode(locations));
+  }
+
+  // get deactivated locations
+  static Future<List<Map<String, dynamic>>> getDeactiLoc() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getString(_keyDeactiLoc);
+    if (data == null) return [];
+    try {
+      final List<dynamic> decoded = jsonDecode(data);
+      return decoded.map((e) => Map<String, dynamic>.from(e)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // add deactivated location
+  static Future<void> addDeactiLoc(Map<String, dynamic> location) async {
+    final list = await getDeactiLoc();
+    list.removeWhere((loc) => loc['id'] == location['id']);
+    list.add(location);
+    await saveDeactiLoc(list);
+  }
+
+  // remove deactivated location
+  static Future<void> rmvDeactiLoc(String locId) async {
+    final list = await getDeactiLoc();
+    list.removeWhere((loc) => loc['id'] == locId);
+    await saveDeactiLoc(list);
+  }
+
   static Future<void> clearAuthData() async {
+    try {
+      await GeofenceManager().stopMonitoring();
+    } catch (_) {}
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_AccToken);
     await prefs.remove(_rtoken);
@@ -144,7 +185,8 @@ class SharedPrefsHelper {
     await prefs.remove(_keyUserEmail);
     await prefs.remove(_keyCachedTasks);
     await prefs.remove(_keyPendingSyncActions);
-    await prefs.remove(_keyCachedLocations);
+    await prefs.remove(_keysaveLoc);
+    await prefs.remove(_keyDeactiLoc);
     await prefs.remove(_keyUserRole);
   }
 }

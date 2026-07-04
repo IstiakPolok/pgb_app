@@ -7,9 +7,27 @@ import 'package:pgb_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:pgb_app/core/utils/shared_prefs_helper.dart';
 import 'package:pgb_app/core/router/app_router.dart';
 
+import 'package:pgb_app/core/services/geofence_manager.dart';
+import 'package:pgb_app/core/services/sync_manager.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Geofence notifications
+  final geofenceManager = GeofenceManager();
+  await geofenceManager.init();
+
+  // Initialize Sync Manager
+  final syncManager = SyncManager();
+  await syncManager.init();
+
   final token = await SharedPrefsHelper.getAccessToken();
+  
+  // If logged in already, start monitoring right away
+  if (token != null) {
+    await geofenceManager.startMonitoring();
+  }
+
   runApp(PgbApp(hasToken: token != null));
 }
 

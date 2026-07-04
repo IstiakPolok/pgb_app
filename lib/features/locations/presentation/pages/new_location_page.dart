@@ -10,6 +10,7 @@ import 'package:pgb_app/features/locations/presentation/bloc/locations_bloc.dart
 import 'package:pgb_app/features/locations/presentation/bloc/locations_event.dart';
 import 'package:pgb_app/features/locations/presentation/bloc/locations_state.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:geolocator/geolocator.dart';
 
 class NewLocationPage extends StatefulWidget {
   const NewLocationPage({super.key});
@@ -68,6 +69,53 @@ class _NewLocationPageState extends State<NewLocationPage> {
 
   void _Gmap(GoogleMapController controller) {
     _mapCtrl = controller;
+  }
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Fetching current location...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw 'Location services are disabled.';
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw 'Location permissions are denied';
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        throw 'Location permissions are permanently denied.';
+      }
+
+      final position = await Geolocator.getCurrentPosition();
+      if (!mounted) return;
+      setState(() {
+        _center = LatLng(position.latitude, position.longitude);
+        _latCtrl.text = position.latitude.toStringAsFixed(6);
+        _lngCtrl.text = position.longitude.toStringAsFixed(6);
+      });
+
+      _mapCtrl?.animateCamera(CameraUpdate.newLatLng(_center));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location updated to current position')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   @override
@@ -207,7 +255,7 @@ class _NewLocationPageState extends State<NewLocationPage> {
                         padding: EdgeInsets.zero,
                       ),
                       child: InkWell(
-                        onTap: () {},
+                        onTap: _getCurrentLocation,
                         borderRadius: BorderRadius.circular(12.r),
                         child: Container(
                           width: double.infinity,
